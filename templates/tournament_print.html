@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ t.name }} — {{ 'таблица' if kind == 'standings' else 'пары тура ' ~ rnd }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}">
+</head>
+<body>
+<div class="noprint bar"><button id="printbtn" type="button">🖨 Печать</button> <a href="{{ url_for('tournaments.view', tid=t.id) }}">← к турниру</a></div>
+<h1>{{ t.name }}</h1>
+<p class="sub">{% if club %}{{ club.name }} · {% endif %}{{ SYSTEMS[t.system] }} · {{ tc_text(t.tc, t.inc) }} · {{ t.rounds }} тур. · {{ 'онлайн' if t.mode == 'online' else 'очно' }}{% if t.starts %} · {{ t.starts|dt }}{% endif %}</p>
+{% if kind == 'standings' %}
+{% set place = {} %}{% for r in table %}{% set _ = place.update({r.id: r.place}) %}{% endfor %}
+<h2>Турнирная таблица{% if t.status != 'finished' %} после {{ t.current_round }}-го тура{% endif %}</h2>
+<table>
+  <thead><tr><th>Место</th><th class="l">Участник</th><th>Рейт.</th>{% for r in range(1, t.current_round + 1) %}<th>{{ r }}</th>{% endfor %}<th>Очки</th><th>Бух-1</th><th>Бух</th><th>Берг</th><th>Поб</th></tr></thead>
+  <tbody>
+  {% for r in table %}
+  <tr><td>{{ r.place }}</td><td class="l">{{ r.name }}{% if r.withdrawn %} (снят){% endif %}</td><td>{{ r.rating or '' }}</td>
+    {% for rn in range(1, t.current_round + 1) %}{% set gm = r.games.get(rn) %}
+    <td>{% if gm %}{% if gm[0] %}{{ place[gm[0]] }}{{ {1.0: '+', 0.5: '=', 0.0: '−'}[gm[1]] if gm[2] else ('+!' if gm[1] == 1 else '−!') }}{% else %}{{ 'bye' if gm[1] else '−' }}{% endif %}{% endif %}</td>
+    {% endfor %}
+    <td><b>{{ r.points|pts }}</b></td><td>{{ r.bh1|pts }}</td><td>{{ r.bh|pts }}</td><td>{{ r.sb|pts }}</td><td>{{ r.wins }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="note">В клетке тура: место соперника и результат (+ победа, = ничья, − поражение, ! — без игры). Тай-брейки: усечённый Бухгольц, Бухгольц, Бергер, число побед.</p>
+{% else %}
+<h2>Тур {{ rnd }} — пары</h2>
+<table>
+  <thead><tr><th>Доска</th><th class="l">Белые</th><th>Очки</th><th>Результат</th><th>Очки</th><th class="l">Чёрные</th></tr></thead>
+  <tbody>
+  {% set pmap = {} %}{% for r in table %}{% set _ = pmap.update({r.id: r}) %}{% endfor %}
+  {% for x in rounds.get(rnd, []) %}
+    {% set w = names[x.white_id] %}{% set b = names.get(x.black_id) %}
+    <tr><td>{{ x.board }}</td><td class="l">{{ w.name }}</td><td>{{ pmap[w.id].points|pts if w.id in pmap else '' }}</td>
+      <td class="res">{% if b %}{{ LABEL[x.result] if x.result else '' }}{% else %}bye{% endif %}</td>
+      <td>{{ pmap[b.id].points|pts if b and b.id in pmap else '' }}</td><td class="l">{{ b.name if b else '—' }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="note">Очки — до начала тура. Результат вписывается после партии: 1–0, ½–½, 0–1.</p>
+{% endif %}
+<p class="foot">Ладья · {{ now|dt }}</p>
+<script src="{{ url_for('static', filename='js/print.js') }}"></script>
+</body>
+</html>

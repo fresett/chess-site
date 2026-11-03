@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Приглашение в клуб — Ладья{% endblock %}
+{% block content %}
+<section class="panel narrow center-col">
+  <div class="bigicon">🏠</div>
+  <h2>{{ club.name }}</h2>
+  <p class="muted">{{ club.description or 'Тебя пригласили в шахматный клуб.' }}</p>
+  {% if member %}
+    <p class="notice">Ты уже в этом клубе.</p>
+    <a class="btn" href="{{ url_for('clubs.view', cid=club.id) }}">Открыть клуб</a>
+  {% elif user %}
+    <form method="post"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn big">✔ Вступить в клуб</button></form>
+  {% else %}
+    <p>Чтобы вступить, войди или создай аккаунт — ссылка сработает после входа.</p>
+    <div class="row"><a class="btn" href="{{ url_for('accounts.register', next=request.path) }}">Регистрация</a><a class="btn ghost" href="{{ url_for('accounts.login', next=request.path) }}">Вход</a></div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}{{ club.name }} — Ладья{% endblock %}
+{% block content %}
+<section class="wide">
+  <div class="pagehead">
+    <div>
+      <p class="crumbs"><a href="{{ url_for('clubs.index') }}">Клубы</a> /</p>
+      <h2>{{ club.name }}</h2>
+      <p class="muted">Тренер: {% if owner %}<a href="{{ url_for('accounts.public_profile', nick=owner.nick) }}">{{ owner.nick }}</a>{% else %}—{% endif %} · участников: {{ members|length }} · вступление {{ policies[club.join_policy] }}</p>
+    </div>
+    <div class="row">
+      {% if manage %}
+        <a class="btn" href="{{ url_for('tournaments.new', club=club.id) }}">🏆 Новый турнир</a>
+        <a class="btn ghost" href="{{ url_for('clubs.edit', cid=club.id) }}">⚙ Настройки</a>
+      {% endif %}
+      {% if user and not me_m %}
+        {% if pending %}<span class="pill">⏳ Заявка отправлена</span>
+        {% elif club.join_policy != 'invite' %}
+        <form method="post" action="{{ url_for('clubs.join', cid=club.id) }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn">{{ 'Вступить' if club.join_policy == 'open' else 'Подать заявку' }}</button></form>
+        {% endif %}
+      {% elif not user %}
+        <a class="btn" href="{{ url_for('accounts.login', next=request.path) }}">Войти, чтобы вступить</a>
+      {% endif %}
+    </div>
+  </div>
+  {% if club.description %}<div class="panel prose">{{ club.description }}</div>{% endif %}
+
+  {% if manage %}
+  <div class="panel manage">
+    <h3>Управление</h3>
+    <div class="lbl">Ссылка-приглашение (вступление без заявки)</div>
+    <div class="copyrow"><input id="invite" readonly value="{{ invite }}"><button class="btn ghost copybtn" type="button" data-copy="#invite">📋 Копировать</button></div>
+    <form method="post" action="{{ url_for('clubs.new_code', cid=club.id) }}" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="linkbtn">Создать новую ссылку (старая перестанет работать)</button></form>
+    {% if requests %}
+    <div class="lbl">Заявки на вступление</div>
+    <div class="list">
+      {% for r in requests %}
+      <div class="lrow"><span class="grow"><a href="{{ url_for('accounts.public_profile', nick=r.nick) }}">{{ r.nick }}</a> <small class="muted">рейтинг {{ r.rating }} · {{ r.created|d }}</small>{% if r.message %}<br><small>«{{ r.message }}»</small>{% endif %}</span>
+        <form method="post" action="{{ url_for('clubs.handle_request', cid=club.id, uid=r.user_id, action='approve') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn sm">Принять</button></form>
+        <form method="post" action="{{ url_for('clubs.handle_request', cid=club.id, uid=r.user_id, action='reject') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn ghost sm">Отклонить</button></form>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}<p class="muted small">Новых заявок нет.</p>{% endif %}
+  </div>
+  {% endif %}
+
+  <div class="cols">
+    <div class="panel">
+      <h3>Рейтинг клуба</h3>
+      <div class="tabs mini">
+        <a href="{{ url_for('clubs.view', cid=club.id) }}" class="{{ 'on' if pool == 'club' }}">Клубный</a>
+        {% for k, n in pools.items() %}<a href="{{ url_for('clubs.view', cid=club.id, pool=k) }}" class="{{ 'on' if pool == k }}">{{ n }}</a>{% endfor %}
+      </div>
+      <div class="list">
+        {% for m in members %}
+        <div class="lrow{{ ' me' if user and user.id == m.id }}">
+          <span class="pos">{{ loop.index }}</span>
+          <a class="grow who" href="{{ url_for('accounts.public_profile', nick=m.nick) }}"><img src="{{ m.ava }}" alt="">{{ m.nick }}{% if m.role == 'coach' %} <span class="tag">тренер</span>{% endif %}</a>
+          <b class="rt">{{ m.show }}</b>
+          {% if manage and m.id != club.owner_id %}
+          <details class="menu"><summary title="Действия">⋯</summary><div>
+            <form method="post" action="{{ url_for('clubs.member_action', cid=club.id, uid=m.id, action='member' if m.role == 'coach' else 'coach') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button>{{ 'Снять роль тренера' if m.role == 'coach' else 'Сделать тренером клуба' }}</button></form>
+            <form method="post" action="{{ url_for('clubs.member_action', cid=club.id, uid=m.id, action='remove') }}" data-confirm="Удалить {{ m.nick }} из клуба?"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="danger-text">Удалить из клуба</button></form>
+          </div></details>
+          {% endif %}
+        </div>
+        {% else %}<p class="muted empty-state">В клубе пока никого нет.</p>{% endfor %}
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Турниры клуба</h3>
+      <div class="list">
+        {% for t in tours %}
+        <a class="lrow" href="{{ url_for('tournaments.view', tid=t.id) }}"><span class="lic">{{ '🔴' if t.status == 'running' else '📝' if t.status == 'registration' else '🏁' }}</span><span class="grow"><b>{{ t.name }}</b><br><small class="muted">{{ {'registration':'регистрация','running':'идёт, тур ' ~ t.current_round ~ ' из ' ~ t.rounds,'finished':'завершён'}[t.status] }} · {{ 'онлайн' if t.mode == 'online' else 'очно' }}{% if t.starts %} · {{ t.starts|dt }}{% endif %}</small></span></a>
+        {% else %}<p class="muted empty-state">Турниров пока не было.{% if manage %} <a href="{{ url_for('tournaments.new', club=club.id) }}">Создать первый</a>{% endif %}</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {% if me_m and club.owner_id != user.id %}
+  <form method="post" action="{{ url_for('clubs.leave', cid=club.id) }}" class="center" data-confirm="Выйти из клуба?"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="linkbtn">Выйти из клуба</button></form>
+  {% endif %}
+  {% if user and (is_admin or club.owner_id == user.id) %}
+  <details class="settings danger-wrap">
+    <summary>Удалить клуб</summary>
+    <form method="post" action="{{ url_for('clubs.delete', cid=club.id) }}" class="sform danger-zone">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <span class="muted">Участники останутся на сайте, турниры клуба станут открытыми. Впиши название клуба для подтверждения.</span>
+      <input name="confirm" required placeholder="{{ club.name }}">
+      <button class="btn danger">Удалить клуб</button>
+    </form>
+  </details>
+  {% endif %}
+</section>
+{% endblock %}
+

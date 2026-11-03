@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Настройки клуба' if club else 'Новый клуб' }} — Ладья{% endblock %}
+{% block content %}
+<form class="form wideform" method="post">
+  <h2>{{ 'Настройки клуба' if club else 'Новый клуб' }}</h2>
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <label>Название<input name="name" required minlength="3" maxlength="60" value="{{ club.name if club else '' }}"></label>
+  <label>Описание <span class="muted">(расписание занятий, адрес, кому подходит)</span><textarea name="description" rows="5" maxlength="2000">{{ club.description if club else '' }}</textarea></label>
+  <label>Как вступить
+    <select name="join_policy">{% for k, v in policies.items() %}<option value="{{ k }}"{{ ' selected' if club and club.join_policy == k }}>{{ v }}</option>{% endfor %}</select>
+  </label>
+  <p class="muted small">По ссылке-приглашению можно вступить всегда — её видишь только ты и тренеры клуба.</p>
+  <div class="row"><button class="btn">{{ 'Сохранить' if club else 'Создать клуб' }}</button><a class="btn ghost" href="{{ url_for('clubs.view', cid=club.id) if club else url_for('clubs.index') }}">Отмена</a></div>
+</form>
+{% endblock %}

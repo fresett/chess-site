@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block title %}{{ t.name }} — Ладья{% endblock %}
+{% block content %}
+{% set pts = {} %}
+{% for r in table %}{% set _ = pts.update({r.id: r}) %}{% endfor %}
+<section class="wide" {% if t.status == 'running' %}data-sig-url="{{ url_for('tournaments.signature', tid=t.id) }}"{% endif %}>
+  <div class="pagehead">
+    <div>
+      <p class="crumbs"><a href="{{ url_for('tournaments.index') }}">Турниры</a>{% if club %} / <a href="{{ url_for('clubs.view', cid=club.id) }}">{{ club.name }}</a>{% endif %} /</p>
+      <h2>{{ t.name }} <span class="tstat s-{{ t.status }}">{{ STATUS[t.status] }}{% if t.status == 'running' %} · тур {{ t.current_round }} из {{ t.rounds }}{% endif %}</span></h2>
+      <p class="muted">{{ SYSTEMS[t.system] }} · {{ t.rounds }} {{ 'тур' if t.rounds == 1 else 'тура' if t.rounds < 5 else 'туров' }} · {{ tc_text(t.tc, t.inc) }} · {{ 'онлайн на сайте' if t.mode == 'online' else 'очно' }} · bye = {{ t.bye_points|pts }}{% if t.starts %} · начало {{ t.starts|dt }}{% endif %}</p>
+    </div>
+    <div class="row">
+      {% if my_game %}<a class="btn" href="{{ url_for('online.game_page', gid=my_game.id) }}">♟ Твоя партия идёт — открыть</a>{% endif %}
+      {% if can_join %}<form method="post" action="{{ url_for('tournaments.join', tid=t.id) }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn">✔ Участвовать</button></form>{% endif %}
+      {% if me_p and t.status == 'registration' %}<form method="post" action="{{ url_for('tournaments.leave', tid=t.id) }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn ghost">Сняться</button></form>{% endif %}
+      {% if not user and t.status == 'registration' %}<a class="btn" href="{{ url_for('accounts.login', next=request.path) }}">Войти, чтобы участвовать</a>{% endif %}
+    </div>
+  </div>
+  {% if t.description %}<div class="panel prose">{{ t.description }}</div>{% endif %}
+  {% if t.club_id and t.status == 'registration' and user and not me_p and not can_join %}<p class="notice">Это турнир клуба «{{ club.name if club else '' }}» — чтобы участвовать, <a href="{{ url_for('clubs.view', cid=t.club_id) }}">вступи в клуб</a>.</p>{% endif %}
+
+  {% if manage %}
+  <div class="panel manage">
+    <h3>Управление турниром</h3>
+    <div class="row wrap">
+      {% if t.status == 'registration' %}
+        <form method="post" action="{{ url_for('tournaments.start', tid=t.id) }}" data-confirm="Начать турнир? После старта нельзя будет менять систему и контроль времени."><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn">▶ Начать турнир ({{ players|rejectattr('withdrawn')|list|length }} игр.)</button></form>
+      {% endif %}
+      {% if can_pair %}
+        <form method="post" action="{{ url_for('tournaments.pair', tid=t.id) }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn">🎲 Жеребьёвка {{ t.current_round + 1 }}-го тура</button></form>
+      {% endif %}
+      {% if t.status == 'running' and t.current_round %}
+        <form method="post" action="{{ url_for('tournaments.unpair', tid=t.id) }}" data-confirm="Отменить жеребьёвку {{ t.current_round }}-го тура?"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn ghost">↶ Отменить жеребьёвку тура {{ t.current_round }}</button></form>
+        <form method="post" action="{{ url_for('tournaments.finish', tid=t.id) }}" data-confirm="Завершить турнир досрочно?"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn ghost">🏁 Завершить</button></form>
+      {% endif %}
+      {% if t.status == 'finished' %}
+        <form method="post" action="{{ url_for('tournaments.reopen', tid=t.id) }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn ghost">↺ Открыть снова (исправить результаты)</button></form>
+      {% endif %}
+      <a class="btn ghost" href="{{ url_for('tournaments.edit', tid=t.id) }}">⚙ Настройки</a>
+    </div>
+    {% if t.status == 'running' and not can_pair and t.current_round < t.rounds %}<p class="muted small">Следующую жеребьёвку можно сделать, когда будут внесены все результаты тура {{ t.current_round }}.</p>{% endif %}
+    {% if t.mode == 'online' and t.status == 'running' %}<p class="muted small">Онлайн: партии создаются при жеребьёвке, игроки получают уведомление. Результаты записываются сами; кто не сделал первый ход за 3 минуты — получает поражение (неявка). Любой результат можно исправить вручную.</p>{% endif %}
+  </div>
+  {% endif %}
+
+  <div class="tabs anchors"><a href="#standings">📊 Таблица</a><a href="#rounds">🎲 Туры</a><a href="#players">👥 Участники ({{ players|length }})</a></div>
+
+  <div class="panel" id="standings">
+    <div class="phead2"><h3>Турнирная таблица</h3><a class="btn ghost sm" href="{{ url_for('tournaments.print_standings', tid=t.id) }}" target="_blank" rel="noopener">🖨 Печать</a></div>
+    {% if t.current_round %}
+    <div class="tablewrap">
+    <table class="ttable">
+      <thead><tr><th>#</th><th class="l">Игрок</th><th>Очки</th>{% for r in range(1, t.current_round + 1) %}<th class="hide-sm">{{ r }}</th>{% endfor %}<th title="Усечённый Бухгольц (без худшего соперника)">Бух-1</th><th class="hide-sm" title="Бухгольц: сумма очков соперников">Бух</th><th class="hide-sm" title="Коэффициент Бергера (Зоннеборна — Бергера)">Берг</th><th class="hide-sm">Поб</th></tr></thead>
+      <tbody>
+      {% for r in table %}
+        <tr class="{{ 'me' if me_p and me_p.id == r.id }}{{ ' wd' if r.withdrawn }}">
+          <td>{{ r.place }}</td>
+          <td class="l">{% if r.user_id %}<a href="{{ url_for('accounts.public_profile', nick=r.name) }}">{{ r.name }}</a>{% else %}{{ r.name }}{% endif %}{% if r.withdrawn %} <small class="muted">(снят)</small>{% endif %} <small class="muted">{{ r.rating or '' }}</small></td>
+          <td><b>{{ r.points|pts }}</b></td>
+          {% for rn in range(1, t.current_round + 1) %}
+            {% set gm = r.games.get(rn) %}
+            <td class="hide-sm rc">{% if gm %}{% if gm[0] %}{{ {1.0: '1', 0.5: '½', 0.0: '0'}[gm[1]] if gm[2] else ('+' if gm[1] == 1 else '−') }}<small>{{ pts[gm[0]].place }}</small>{% else %}{{ 'bye' if gm[1] else '−' }}{% endif %}{% else %}·{% endif %}</td>
+          {% endfor %}
+          <td>{{ r.bh1|pts }}</td><td class="hide-sm">{{ r.bh|pts }}</td><td class="hide-sm">{{ r.sb|pts }}</td><td class="hide-sm">{{ r.wins }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    <p class="muted small">В клетках тура: результат и место соперника. Несыгранные туры (bye, неявка) в тай-брейках считаются как партия с соперником, набравшим столько же очков.</p>
+    {% else %}
+    <p class="muted empty-state">Таблица появится после первого тура.</p>
+    {% endif %}
+  </div>
+
+  <div class="panel" id="rounds">
+    <div class="phead2"><h3>Туры</h3>{% if rounds.get(sel_round) %}<a class="btn ghost sm" href="{{ url_for('tournaments.print_round', tid=t.id, rnd=sel_round) }}" target="_blank" rel="noopener">🖨 Печать пар тура {{ sel_round }}</a>{% endif %}</div>
+    {% if rounds %}
+    <div class="tabs mini">{% for r in rounds %}<a href="{{ url_for('tournaments.view', tid=t.id, round=r) }}#rounds" class="{{ 'on' if r == sel_round }}">Тур {{ r }}</a>{% endfor %}</div>
+    <div class="pairings">
+      {% for x in rounds.get(sel_round, []) %}
+        {% set w = names[x.white_id] %}{% set b = names.get(x.black_id) %}
+        <div class="pairing{{ ' mine' if me_p and me_p.id in (x.white_id, x.black_id) }}">
+          <span class="bd">{{ x.board }}</span>
+          <span class="pw">♔ {{ w.name }} <small class="muted">{{ pts[w.id].points|pts if w.id in pts else '' }}</small></span>
+          {% if b %}
+            {% if manage %}
+            <form method="post" action="{{ url_for('tournaments.set_result', tid=t.id, pid=x.id) }}" class="resform">
+              <input type="hidden" name="csrf" value="{{ csrf }}">
+              <select name="result" data-autosubmit aria-label="Результат">
+                <option value=""{{ ' selected' if not x.result }}>— ? —</option>
+                {% for rr in RESULTS %}<option value="{{ rr }}"{{ ' selected' if x.result == rr }}>{{ LABEL[rr] }}</option>{% endfor %}
+              </select>
+              <noscript><button class="btn sm">OK</button></noscript>
+            </form>
+            {% else %}
+            <b class="res">{{ LABEL[x.result] if x.result else '…' }}</b>
+            {% endif %}
+            <span class="pb">♚ {{ b.name }} <small class="muted">{{ pts[b.id].points|pts if b.id in pts else '' }}</small></span>
+            {% if x.game_id %}<a class="watch" href="{{ url_for('online.game_page', gid=x.game_id) }}" title="Открыть партию">{{ '👀' if not x.result else '📄' }}</a>{% endif %}
+          {% else %}
+            <b class="res">bye</b><span class="pb muted">свободный тур (+{{ t.bye_points|pts }})</span>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+    <p class="muted small">Обозначения: + / − — победа/поражение без игры (неявка), − / − — оба не явились.</p>
+    {% else %}
+    <p class="muted empty-state">{{ 'Жеребьёвки ещё не было.' if t.status != 'registration' else 'Турнир ещё не начался.' }}</p>
+    {% endif %}
+  </div>
+
+  <div class="panel" id="players">
+    <h3>Участники</h3>
+    <div class="list">
+      {% for p in players %}
+      <div class="lrow{{ ' wd' if p.withdrawn }}">
+        <span class="pos">{{ p.seed or loop.index }}</span>
+        <span class="grow">{% if p.user_id %}<a href="{{ url_for('accounts.public_profile', nick=p.name) }}">{{ p.name }}</a>{% else %}{{ p.name }} <small class="muted">(без аккаунта)</small>{% endif %}{% if p.withdrawn %} <small class="muted">— снят(а)</small>{% endif %}{% if p.joined_round > 1 %} <small class="muted">с {{ p.joined_round }}-го тура</small>{% endif %}</span>
+        <b class="rt">{{ p.rating }}</b>
+        {% if manage %}
+        <details class="menu"><summary title="Действия">⋯</summary><div>
+          <form method="post" action="{{ url_for('tournaments.player_action', tid=t.id, pid=p.id, action='rating') }}" class="inlineform"><input type="hidden" name="csrf" value="{{ csrf }}"><input name="rating" type="number" min="0" max="3500" value="{{ p.rating }}" aria-label="Рейтинг"><button>Рейтинг для посева</button></form>
+          {% if t.status != 'registration' %}
+            {% if p.withdrawn %}
+            <form method="post" action="{{ url_for('tournaments.player_action', tid=t.id, pid=p.id, action='reinstate') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button>Вернуть в турнир</button></form>
+            {% else %}
+            <form method="post" action="{{ url_for('tournaments.player_action', tid=t.id, pid=p.id, action='withdraw') }}" data-confirm="Снять {{ p.name }} с турнира? В следующих турах пар не будет."><input type="hidden" name="csrf" value="{{ csrf }}"><button class="danger-text">Снять с турнира</button></form>
+            {% endif %}
+          {% endif %}
+          <form method="post" action="{{ url_for('tournaments.player_action', tid=t.id, pid=p.id, action='remove') }}" data-confirm="Удалить {{ p.name }} из турнира?"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="danger-text">Удалить</button></form>
+        </div></details>
+        {% endif %}
+      </div>
+      {% else %}
+      <p class="muted empty-state">Пока никто не записался.</p>
+      {% endfor %}
+    </div>
+    {% if manage and t.status != 'finished' and not (t.system == 'rr' and t.status == 'running') %}
+    <form method="post" action="{{ url_for('tournaments.add_player', tid=t.id) }}" class="addplayer">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <b>Добавить игрока</b>
+      <div class="grid3">
+        <label>Ник на сайте<input name="nick" maxlength="20" list="tnicks" autocomplete="off" data-nicks="#tnicks"></label>
+        {% if t.mode == 'offline' %}<label>или имя (без аккаунта)<input name="name" maxlength="40" placeholder="Иванов Петя"></label>{% endif %}
+        <label>Рейтинг <span class="muted">(необязательно)</span><input name="rating" type="number" min="0" max="3500"></label>
+      </div>
+      <datalist id="tnicks"></datalist>
+      {% if t.status == 'running' %}<p class="muted small">Игрок, добавленный после старта, начнёт с 0 очков со следующего тура.</p>{% endif %}
+      <button class="btn ghost">＋ Добавить</button>
+    </form>
+    {% endif %}
+  </div>
+
+  {% if manage %}
+  <details class="settings danger-wrap">
+    <summary>Удалить турнир</summary>
+    <form method="post" action="{{ url_for('tournaments.delete', tid=t.id) }}" class="sform danger-zone">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <span class="muted">Удалятся пары и результаты. Впиши название турнира для подтверждения.</span>
+      <input name="confirm" required placeholder="{{ t.name }}">
+      <button class="btn danger">Удалить турнир</button>
+    </form>
+  </details>
+  {% endif %}
+</section>
+{% endblock %}
