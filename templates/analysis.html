@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Доска анализа — Ладья{% endblock %}
+{% block content %}
+<div class="stage" id="astage" data-fen="{{ fen }}">
+  <script type="application/json" id="amoves">{{ moves_json|safe }}</script>
+  <div class="boardwrap solo">
+    <div id="board" class="board"></div>
+    <div id="palette" class="palette hidden" aria-label="Фигуры для расстановки"></div>
+  </div>
+  <aside class="panel side">
+    <h2>{{ title or 'Доска анализа' }}</h2>
+    <div class="tabs" id="atabs"><button data-t="moves" class="on">Ходы</button><button data-t="setup">Расстановка</button><button data-t="io">PGN / FEN</button></div>
+    <div id="t-moves">
+      <div class="evalrow"><label class="check"><input type="checkbox" id="engine"><span>Движок</span></label><span id="evaltext" class="evaltext muted">выключен</span></div>
+      <div class="evalbar"><i id="evalbar"></i></div>
+      <div id="status" class="status small-status"></div>
+      <div id="moves" class="moves"></div>
+      <div class="navrow" id="navrow"><button data-n="first" class="btn ghost" title="В начало">⏮</button><button data-n="prev" class="btn ghost" title="Назад (←)">◀</button><button data-n="next" class="btn ghost" title="Вперёд (→)">▶</button><button data-n="last" class="btn ghost" title="В конец">⏭</button></div>
+      <div class="row"><button id="flip" class="btn ghost">⇅ Перевернуть</button><button id="restore" class="btn ghost hidden">↺ Вернуть партию</button></div>
+      <p class="muted small">Ходи фигурами, чтобы исследовать варианты. Правая кнопка мыши: щелчок — кружок, протянуть — стрелка (Shift — красная, Ctrl — синяя).</p>
+    </div>
+    <div id="t-setup" class="hidden">
+      <p class="muted small">Выбери фигуру внизу доски и нажимай на клетки. Повторное нажатие той же фигурой — убрать.</p>
+      <div class="lbl">Чей ход</div>
+      <div id="side2move" class="seg"><button data-c="w" class="on">Белых</button><button data-c="b">Чёрных</button></div>
+      <div class="row"><button id="sstart" class="btn ghost">Начальная</button><button id="sclear" class="btn ghost">Очистить</button></div>
+      <button id="sdone" class="btn">✔ Готово — анализировать</button>
+      <p id="setupmsg" class="muted small"></p>
+    </div>
+    <div id="t-io" class="hidden">
+      <label>FEN позиции<input id="fen" spellcheck="false"></label>
+      <div class="row"><button id="fenload" class="btn ghost">Загрузить FEN</button><button id="fencopy" class="btn ghost">📋 Копировать</button></div>
+      <label>PGN партии<textarea id="pgn" rows="6" spellcheck="false" placeholder="1. e4 e5 2. Nf3 Nc6 …"></textarea></label>
+      <div class="row"><button id="pgnload" class="btn ghost">⬆ Импорт PGN</button><button id="pgnsave" class="btn ghost">⬇ Скачать PGN</button></div>
+      <label class="btn ghost upl">📂 Открыть файл .pgn<input id="pgnfile" type="file" accept=".pgn,text/plain"></label>
+      <p id="iomsg" class="muted small"></p>
+    </div>
+  </aside>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chess.js') }}"></script>
+<script src="{{ url_for('static', filename='js/board.js') }}"></script>
+<script src="{{ url_for('static', filename='js/analysis.js') }}"></script>
+{% endblock %}
