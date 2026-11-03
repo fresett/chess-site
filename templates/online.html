@@ -1,63 +1,104 @@
 {% extends "base.html" %}
 {% block title %}Онлайн — Ладья{% endblock %}
 {% block content %}
-<div class="stage" data-me="{{ me.name if me else '' }}" data-guest="{{ 1 if me and me.guest else 0 }}">
+<div class="stage" id="ostage" data-gid="{{ gid }}" data-me="{{ me.name if me else '' }}" data-guest="{{ 1 if me and me.guest else 0 }}">
   <div class="boardwrap">
-    <div class="pl"><span class="nm" id="top"></span><span class="clk hidden" id="ctop"></span></div>
+    <div class="pl"><span class="nm" id="top"></span><span class="mat" id="mtop"></span><span class="clk hidden" id="ctop"></span></div>
     <div id="board" class="board"></div>
-    <div class="pl"><span class="nm" id="bottom"></span><span class="clk hidden" id="cbot"></span></div>
+    <div class="pl"><span class="nm" id="bottom"></span><span class="mat" id="mbot"></span><span class="clk hidden" id="cbot"></span></div>
   </div>
 
+  {% if not gid %}
   <aside id="lobby" class="panel side">
     <div id="modes" class="tabs">
-      <a href="{{ url_for('play', mode='bot') }}">🤖 Бот</a><a href="{{ url_for('play', mode='coach') }}">🎓 Тренер</a><a href="{{ url_for('play', mode='local') }}">👥 Оффлайн</a><a class="on">🌐 Онлайн</a>
+      <a href="{{ url_for('pages.play', mode='bot') }}">🤖 Бот</a><a href="{{ url_for('pages.play', mode='coach') }}">🎓 Тренер</a><a href="{{ url_for('pages.play', mode='local') }}">👥 Оффлайн</a><a class="on">🌐 Онлайн</a>
     </div>
-    <h2>Онлайн-игра</h2>
     <div class="onstats"><span><i class="dot"></i><b id="sOnline">–</b> на сайте</span><span>🔎 <b id="sSearch">–</b> ищут игру</span><span>♟ <b id="sPlay">–</b> играют</span></div>
 
     {% if not me %}
     <div class="who-box">
-      <p>Чтобы играть онлайн, войди в аккаунт — партии будут идти в рейтинг клуба. Или зайди как гость (без рейтинга).</p>
-      <form method="post" action="{{ url_for('guest') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="next" value="/online"><button class="btn big">👋 Играть как гость</button></form>
-      <div class="row"><a class="btn ghost" href="{{ url_for('login') }}">Войти</a><a class="btn ghost" href="{{ url_for('register') }}">Регистрация</a></div>
+      <p>Чтобы играть онлайн, войди в аккаунт — партии пойдут в рейтинг. Или зайди как гость (без рейтинга).</p>
+      <form method="post" action="{{ url_for('accounts.guest') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}"><button class="btn big">👋 Играть как гость</button></form>
+      <div class="row"><a class="btn ghost" href="{{ url_for('accounts.login', next=request.full_path.rstrip('?')) }}">Войти</a><a class="btn ghost" href="{{ url_for('accounts.register', next=request.full_path.rstrip('?')) }}">Регистрация</a></div>
     </div>
     {% else %}
-    <p class="muted who-line">Ты играешь как <b>{{ me.name }}</b>{% if me.guest %} (гость, без рейтинга) · <a href="{{ url_for('register') }}">зарегистрироваться</a>{% else %} · рейтинг {{ me.rating }}{% endif %}</p>
-    <div id="seekbox">
-      <div class="lbl">Время на партию</div>
-      <div id="tcs" class="seg"><button data-t="180">Блиц<small>3 мин</small></button><button data-t="300" class="on">Блиц<small>5 мин</small></button><button data-t="600">Рапид<small>10 мин</small></button></div>
-      <button id="find" class="btn big">🔎 Найти соперника</button>
+    <p class="muted who-line">Ты играешь как <b>{{ me.name }}</b>{% if me.guest %} (гость, без рейтинга) · <a href="{{ url_for('accounts.register') }}">зарегистрироваться</a>{% endif %}</p>
+    <div id="incoming" class="incoming hidden"></div>
+    <div class="tabs" id="ltabs"><button data-t="quick" class="on">⚡ Быстрая игра</button><button data-t="friend">⚔ Вызов</button><button data-t="watch">👀 Смотреть</button></div>
+    <div id="t-quick">
+      <div id="seekbox">
+        <div id="tcs" class="tcgrid">
+          {% for label, base, inc, pool in tcs %}<button data-tc="{{ label }}" class="{{ 'on' if label == '5+0' }}"><b>{{ label }}</b><small>{{ pool }}</small></button>{% endfor %}
+        </div>
+        <button id="find" class="btn big">🔎 Найти соперника</button>
+      </div>
+      <div id="searching" class="searching hidden">
+        <div class="spinner"></div>
+        <div><b>Ищем соперника <span id="seektc"></span>…</b><span id="waited" class="muted">0:00</span></div>
+        <button id="cancel" class="btn ghost">Отмена</button>
+      </div>
     </div>
-    <div id="searching" class="searching hidden">
-      <div class="spinner"></div>
-      <div><b>Ищем соперника…</b><span id="waited" class="muted">0:00</span></div>
-      <button id="cancel" class="btn ghost">Отмена</button>
+    <div id="t-friend" class="hidden">
+      <form id="chform" class="chform">
+        <label>Ник соперника <span class="muted">(пусто — получишь ссылку-приглашение)</span>
+          <input id="chnick" list="nicklist" maxlength="20" autocomplete="off" placeholder="{{ 'только по ссылке для гостя' if me.guest else 'например, Kirill' }}" {{ 'disabled' if me.guest }} value="{{ request.args.get('challenge', '')[:20] }}">
+        </label>
+        <datalist id="nicklist"></datalist>
+        <label>Контроль времени
+          <select id="chtc">{% for label, base, inc, pool in tcs %}<option value="{{ label }}"{{ ' selected' if label == '10+0' }}>{{ label }} · {{ pool }}</option>{% endfor %}</select>
+        </label>
+        <div class="lbl">Мой цвет</div>
+        <div id="chcolor" class="seg"><button type="button" data-c="white">Белые</button><button type="button" data-c="random" class="on">Случайно</button><button type="button" data-c="black">Чёрные</button></div>
+        {% if not me.guest %}<label class="check"><input type="checkbox" id="chrated" checked><span>На рейтинг</span></label>{% endif %}
+        <button class="btn big">⚔ Создать вызов</button>
+        <p id="chmsg" class="muted small"></p>
+      </form>
     </div>
+    <div id="t-watch" class="hidden"><div id="live" class="list"></div></div>
     <p class="muted small">Совет: чтобы проверить игру одному, открой второе окно в режиме инкогнито (Ctrl+Shift+N) и зайди там другим аккаунтом или гостем.</p>
     {% endif %}
   </aside>
-
-  <aside id="side" class="panel side hidden">
-    <div id="status" class="status"></div>
+  {% else %}
+  <aside id="side" class="panel side">
+    <div id="tban" class="tban hidden"></div>
+    <div id="status" class="status">Загрузка…</div>
+    <div id="gone" class="offer hidden"><span id="gonetext"></span><div class="row hidden" id="claimrow"><button id="claimwin" class="btn">🏆 Забрать победу</button><button id="claimdraw" class="btn ghost">🤝 Ничья</button></div></div>
     <div id="offer" class="offer hidden"><span>🤝 Соперник предлагает ничью</span><div class="row"><button id="oyes" class="btn">Принять</button><button id="ono" class="btn ghost">Отклонить</button></div></div>
+    <div id="roffer" class="offer hidden"><span id="rofftext">🔁 Соперник предлагает реванш</span><div class="row" id="rrow"><button id="ryes" class="btn">Принять</button><button id="rno" class="btn ghost">Отклонить</button></div></div>
     <div id="moves" class="moves"></div>
-    <div class="row">
-      <button id="flip" class="btn ghost">⇅ Перевернуть</button>
+    <div class="navrow" id="navrow"><button data-n="first" class="btn ghost" title="В начало">⏮</button><button data-n="prev" class="btn ghost" title="Назад">◀</button><button data-n="next" class="btn ghost" title="Вперёд">▶</button><button data-n="last" class="btn ghost" title="К последнему ходу">⏭</button></div>
+    <div class="row" id="liverow">
+      <button id="flip" class="btn ghost" title="Перевернуть доску">⇅</button>
       <button id="draw" class="btn ghost">🤝 Ничья</button>
       <button id="resign" class="btn ghost">🏳 Сдаться</button>
-      <button id="again" class="btn hidden">🔎 Новый соперник</button>
     </div>
+    <div class="row hidden" id="overrow">
+      <button id="rematch" class="btn">🔁 Реванш</button>
+      <a id="newopp" class="btn ghost" href="{{ url_for('online.lobby') }}">🔎 Новый соперник</a>
+    </div>
+    <div class="row small-links">
+      <a id="pgn" download class="btn ghost" href="{{ url_for('online.game_pgn', gid=gid) }}">⬇ PGN</a>
+      <a id="analyse" class="btn ghost" href="{{ url_for('pages.analysis', online=gid) }}">🔍 Анализ</a>
+      <button id="report" class="btn ghost hidden" type="button">⚑ Жалоба</button>
+    </div>
+    <p class="muted small" id="premovehint">Премув: пока ходит соперник, сделай свой ход заранее — он сыграется сразу. Правая кнопка мыши — отменить.</p>
   </aside>
+  {% endif %}
 </div>
 <div id="confirm" class="modal hidden"><div class="mbox confirm">
   <div class="mhead"><h2 id="cfh">Сдаться?</h2><p id="ctitle">Партия будет засчитана как поражение</p></div>
   <div class="mbtns"><div class="row"><button id="cno" class="btn ghost">Продолжить игру</button><button id="cyes" class="btn danger">🏳 Сдаться</button></div></div>
 </div></div>
+<div id="rmodal" class="modal hidden"><div class="mbox confirm">
+  <div class="mhead"><h2>Жалоба</h2><p>Администратор клуба увидит партию и твоё сообщение</p></div>
+  <div class="mbtns"><textarea id="rtext" maxlength="500" rows="3" placeholder="Что случилось? Например: грубил в нике, играл с компьютерной помощью…"></textarea>
+  <div class="row"><button id="rcancel" class="btn ghost">Отмена</button><button id="rsend" class="btn danger">Отправить</button></div></div>
+</div></div>
 <div id="modal" class="modal hidden"><div id="mbox" class="mbox">
   <button id="mclose" class="x" title="Закрыть">✕</button>
   <div class="mhead"><h2 id="mtitle"></h2><p id="msub"></p></div>
   <div id="mrating" class="mrating hidden"></div>
-  <div class="mbtns"><button id="mnew" class="btn big">🔎 Новый соперник</button><button id="mview" class="btn ghost">Посмотреть доску</button></div>
+  <div class="mbtns"><button id="mrematch" class="btn big">🔁 Реванш</button><a id="mnew" class="btn ghost" href="{{ url_for('online.lobby') }}">🔎 Новый соперник</a><button id="mview" class="btn ghost">Посмотреть доску</button></div>
 </div></div>
 {% endblock %}
 {% block scripts %}

@@ -12,17 +12,56 @@ class Board {
     this.flip = false; this.sel = -1; this.targets = []; this.last = null; this.hint = -1; this.pending = null; this.drag = null; this.dropped = false;
     this.badge = null; // {sq, k}: значок оценки хода над фигурой
     this.warn = -1;    // клетка фигуры, которой угрожают (тренер подсвечивает красным)
+    this.pre = null;   // премув {from, to, promo}: ход, сделанный заранее, пока ходит соперник
+    this.shapes = [];  // стрелки и кружки, нарисованные правой кнопкой мыши: {from, to, c}
+    this.rdown = -1;
     el.addEventListener('pointerdown', e => this.down(e));
+    // правая кнопка: стрелки (протянуть) и подсветка клетки (щелчок); также отменяет премув
+    el.addEventListener('contextmenu', e => e.preventDefault());
+    el.addEventListener('pointerdown', e => {
+      if (e.button !== 2) return;
+      const s = e.target.closest('.sq'); this.rdown = s ? +s.dataset.i : -1;
+      if (this.pre) { this.pre = null; this.sel = -1; this.targets = []; if (this.o.onPremove) this.o.onPremove(null); this.render(); this.rdown = -1; }
+    });
+    el.addEventListener('pointerup', e => {
+      if (e.button !== 2 || this.rdown < 0) return;
+      const t = document.elementFromPoint(e.clientX, e.clientY), s = t && t.closest && t.closest('.sq');
+      const to = s && el.contains(s) ? +s.dataset.i : -1; if (to < 0) return;
+      const c = e.shiftKey ? 'r' : e.ctrlKey || e.altKey ? 'b' : 'g', from = this.rdown; this.rdown = -1;
+      const k = this.shapes.findIndex(x => x.from === from && x.to === to);
+      if (k >= 0) { const same = this.shapes[k].c === c; this.shapes.splice(k, 1); if (!same) this.shapes.push({ from, to, c }); }
+      else this.shapes.push({ from, to, c });
+      this.drawShapes();
+      if (this.o.onShapes) this.o.onShapes(this.shapes);
+    });
     root.addEventListener('designchange', () => this.render());
     el.addEventListener('click', e => {
       const pr = e.target.closest('.pr');
       if (pr && this.pending) { const { from, to, dropped } = this.pending; this.pending = null; this.fire(from, to, pr.dataset.p, dropped); }
     });
   }
+  // ходы для премува: как будто сейчас наш ход (без проверки шаха — проверит сервер, когда придёт очередь)
+  premoves(from) {
+    const g = this.g, me = this.o.premoveColor(), saveT = g.turn, saveEp = g.ep;
+    g.turn = me; g.ep = -1;
+    let ms = [];
+    try { ms = g.pseudo().filter(m => m.from === from && m.flag !== 'c'); } finally { g.turn = saveT; g.ep = saveEp; }
+    // рокировка премувом: король на 2 клетки, если права есть
+    const k = me === 'w' ? 60 : 4, p = g.b[from];
+    if (from === k && p && p.toLowerCase() === 'k') {
+      if (g.castle.includes(me === 'w' ? 'K' : 'k')) ms.push({ from, to: from + 2, p, cap: '', flag: 'c' });
+      if (g.castle.includes(me === 'w' ? 'Q' : 'q')) ms.push({ from, to: from - 2, p, cap: '', flag: 'c' });
+    }
+    return ms;
+  }
   down(e) {
+    if (e.button === 0 && this.shapes.length) { this.shapes = []; this.drawShapes(); if (this.o.onShapes) this.o.onShapes(this.shapes); }
     if (e.button !== 0 || this.pending || e.target.closest('.pr')) return;
-    const s = e.target.closest('.sq'); if (!s || !this.o.canMove || !this.o.canMove()) return;
+    if (this.o.editor && this.o.editor()) return;
+    const s = e.target.closest('.sq'); if (!s) return;
     const i = +s.dataset.i, g = this.g, p = g.b[i];
+    if (this.o.canPremove && this.o.canPremove() && !(this.o.canMove && this.o.canMove())) { this.downPre(i, p); return; }
+    if (!this.o.canMove || !this.o.canMove()) return;
     if (this.sel >= 0) { const ms = this.targets.filter(m => m.to === i); if (ms.length) { this.choose(this.sel, i, ms[0].promo, false); return; } }
     if (p && isW(p) === (g.turn === 'w')) {
       this.sel = i; this.targets = g.legal().filter(m => m.from === i); this.render();
@@ -31,6 +70,19 @@ class Board {
       document.addEventListener('pointermove', this.mv); document.addEventListener('pointerup', this.up); document.addEventListener('pointercancel', this.up);
       e.preventDefault();
     } else { this.sel = -1; this.targets = []; this.render(); }
+  }
+  downPre(i, p) {
+    const me = this.o.premoveColor();
+    if (this.sel >= 0) {
+      const ms = this.targets.filter(m => m.to === i);
+      if (ms.length) {
+        this.pre = { from: this.sel, to: i, promo: ms[0].promo ? 'q' : undefined };
+        this.sel = -1; this.targets = []; this.render(); if (this.o.onPremove) this.o.onPremove(this.pre); return;
+      }
+    }
+    if (p && isW(p) === (me === 'w')) { this.sel = i; this.targets = this.premoves(i); this.pre = null; }
+    else { this.sel = -1; this.targets = []; }
+    this.render();
   }
   move(e) {
     const d = this.drag; if (!d) return;
@@ -126,6 +178,7 @@ class Board {
       if (i === chk) c += ' chk';
       if (i === this.hint) c += ' hint';
       if (i === this.warn) c += ' warn';
+      if (this.pre && (i === this.pre.from || i === this.pre.to)) c += ' pre';
       if (this.targets.some(m => m.to === i)) c += p ? ' ring' : ' dot';
       h += `<div class="${c}" data-i="${i}">` +
         (vc === 0 ? `<span class="co r">${sqn(i)[1]}</span>` : '') + (vr === 7 ? `<span class="co f">${sqn(i)[0]}</span>` : '') +
@@ -136,6 +189,25 @@ class Board {
       h += '<div class="promo">' + ['q', 'r', 'b', 'n'].map(x => `<div class="pr" data-p="${x}">${glyph(w ? x.toUpperCase() : x)}</div>`).join('') + '</div>';
     }
     this.el.innerHTML = h;
+    this.drawShapes();
+  }
+  // стрелки и кружки поверх доски (SVG, координаты 0..8)
+  drawShapes() {
+    let svg = this.el.querySelector('svg.shapes');
+    if (!this.shapes.length) { if (svg) svg.remove(); return; }
+    if (!svg) { svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('class', 'shapes'); svg.setAttribute('viewBox', '0 0 8 8'); this.el.appendChild(svg); }
+    const COL = { g: '#15781b', r: '#c33', b: '#1d5fc2' };
+    const xy = i => { let r = i >> 3, c = i & 7; if (this.flip) { r = 7 - r; c = 7 - c; } return [c + 0.5, r + 0.5]; };
+    let h = '';
+    for (const s of this.shapes) {
+      const col = COL[s.c] || COL.g, [x1, y1] = xy(s.from), [x2, y2] = xy(s.to);
+      if (s.from === s.to) { h += `<circle cx="${x1}" cy="${y1}" r="0.44" fill="none" stroke="${col}" stroke-width="0.08" opacity="0.85"/>`; continue; }
+      const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, hl = 0.38, hw = 0.26;
+      const bx = x2 - ux * hl, by = y2 - uy * hl, sx = x1 + ux * 0.25, sy = y1 + uy * 0.25;
+      h += `<g opacity="0.8"><line x1="${sx}" y1="${sy}" x2="${bx}" y2="${by}" stroke="${col}" stroke-width="0.16" stroke-linecap="round"/>` +
+        `<polygon points="${x2},${y2} ${bx - uy * hw},${by + ux * hw} ${bx + uy * hw},${by - ux * hw}" fill="${col}"/></g>`;
+    }
+    svg.innerHTML = h;
   }
 }
 root.Board = Board;
