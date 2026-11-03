@@ -1,0 +1,39 @@
+{% extends "admin/_base.html" %}
+{% block admin %}
+<form class="filters" method="get">
+  <input name="q" value="{{ q }}" placeholder="Поиск по нику" aria-label="Поиск по нику">
+  <select name="role" aria-label="Роль"><option value="">Все роли</option>{% for k, v in ROLE_NAMES.items() %}<option value="{{ k }}"{{ ' selected' if role == k }}>{{ v }}</option>{% endfor %}</select>
+  <label class="check"><input type="checkbox" name="blocked" value="1"{{ ' checked' if request.args.get('blocked') }}><span>только заблокированные</span></label>
+  <button class="btn sm">Найти</button>
+</form>
+<div class="list">
+{% for u in rows %}
+  <div class="lrow urow{{ ' wd' if u.blocked }}">
+    <span class="grow"><a href="{{ url_for('accounts.public_profile', nick=u.nick) }}"><b>{{ u.nick }}</b></a>
+      <span class="tag r-{{ u.role }}">{{ ROLE_NAMES[u.role] }}</span>
+      {% if u.blocked %}<span class="tag bad">заблокирован</span>{% endif %}
+      {% if u.locked_until > now %}<span class="tag bad">вход закрыт до {{ u.locked_until|dt }}</span>{% endif %}
+      {% if u.must_change_pw %}<span class="tag">сменит пароль при входе</span>{% endif %}
+      <br><small class="muted">с {{ u.created|d }} · последний вход {{ u.last_login|dt if u.last_login else '—' }} · рейтинг {{ u.rating }}</small></span>
+    <details class="menu"><summary title="Действия">⋯</summary><div>
+      <form method="post" action="{{ url_for('admin.user_action', uid=u.id, action='role') }}" class="inlineform"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="back" value="{{ request.full_path }}">
+        <select name="role" aria-label="Роль">{% for k, v in ROLE_NAMES.items() %}<option value="{{ k }}"{{ ' selected' if u.role == k }}>{{ v }}</option>{% endfor %}</select><button>Сменить роль</button></form>
+      <form method="post" action="{{ url_for('admin.user_action', uid=u.id, action='reset') }}" data-confirm="Сбросить пароль {{ u.nick }}? Будет показан временный пароль."><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="back" value="{{ request.full_path }}"><button>Сбросить пароль</button></form>
+      {% if u.locked_until > now %}<form method="post" action="{{ url_for('admin.user_action', uid=u.id, action='unlock') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="back" value="{{ request.full_path }}"><button>Разблокировать вход</button></form>{% endif %}
+      {% if u.blocked %}
+      <form method="post" action="{{ url_for('admin.user_action', uid=u.id, action='unblock') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="back" value="{{ request.full_path }}"><button>Разблокировать</button></form>
+      {% else %}
+      <form method="post" action="{{ url_for('admin.user_action', uid=u.id, action='block') }}" data-confirm="Заблокировать {{ u.nick }}?"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="back" value="{{ request.full_path }}"><button class="danger-text">Заблокировать</button></form>
+      {% endif %}
+      <form method="post" action="{{ url_for('admin.user_action', uid=u.id, action='delete') }}" class="inlineform"><input type="hidden" name="csrf" value="{{ csrf }}"><input name="confirm" placeholder="ник для подтверждения" aria-label="Ник для подтверждения"><button class="danger-text">Удалить аккаунт</button></form>
+    </div></details>
+  </div>
+{% else %}
+  <p class="muted empty-state">Никого не нашлось.</p>
+{% endfor %}
+</div>
+<div class="pager">
+  {% if page > 1 %}<a class="btn ghost" href="{{ url_for('admin.users', q=q, role=role, page=page - 1) }}">← Назад</a>{% endif %}
+  {% if more %}<a class="btn ghost" href="{{ url_for('admin.users', q=q, role=role, page=page + 1) }}">Дальше →</a>{% endif %}
+</div>
+{% endblock %}

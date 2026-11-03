@@ -1,0 +1,21 @@
+{% extends "admin/_base.html" %}
+{% block admin %}
+<div class="stats">
+  <a href="{{ url_for('admin.users') }}"><b>{{ counts.users }}</b>пользователей</a>
+  <a href="{{ url_for('admin.users', blocked=1) }}"><b>{{ counts.blocked }}</b>заблокировано</a>
+  <a href="{{ url_for('admin.clubs') }}"><b>{{ counts.clubs }}</b>клубов</a>
+  <a href="{{ url_for('admin.tournaments') }}"><b>{{ counts.tournaments }}</b>турниров</a>
+  <a href="{{ url_for('admin.reports') }}"><b>{{ counts.reports }}</b>открытых жалоб</a>
+  <a href="{{ url_for('admin.logins', fail=1) }}"><b>{{ counts.fails24 }}</b>неудачных входов за сутки</a>
+  <div><b>{{ counts.games }}</b>партий онлайн сейчас</div>
+</div>
+<div class="panel prose">
+  <h3>Памятка</h3>
+  <ul>
+    <li><b>Роли:</b> администратор — всё; тренер — создаёт клубы и турниры и управляет своими; участник — играет.</li>
+    <li><b>Ученик забыл пароль:</b> Пользователи → «Сбросить пароль». Появится временный пароль — продиктуй его; при входе ученик придумает свой.</li>
+    <li><b>Блокировка</b> сразу выкидывает человека со всех устройств. Временная блокировка входа (после {{ config.LOCK_AFTER_FAILS }} неверных паролей) снимается сама через {{ config.LOCK_SECONDS // 60 }} минут или кнопкой «Разблокировать вход».</li>
+    <li><b>Резервная копия:</b> в консоли хостинга <code>python manage.py backup</code>.</li>
+  </ul>
+</div>
+{% endblock %}

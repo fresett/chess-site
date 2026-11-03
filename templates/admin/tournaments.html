@@ -1,0 +1,8 @@
+{% extends "admin/_base.html" %}
+{% block admin %}
+<div class="list">
+{% for t in rows %}
+  <a class="lrow" href="{{ url_for('tournaments.view', tid=t.id) }}"><span class="grow"><b>{{ t.name }}</b><br><small class="muted">{{ t.club or 'открытый' }} · {{ t.owner or '—' }} · {{ t.n }} игр. · {{ {'registration':'регистрация','running':'идёт','finished':'завершён'}[t.status] }} · {{ 'онлайн' if t.mode == 'online' else 'очно' }}</small></span></a>
+{% else %}<p class="muted empty-state">Турниров нет.</p>{% endfor %}
+</div>
+{% endblock %}

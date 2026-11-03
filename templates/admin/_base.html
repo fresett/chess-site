@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Админка — Ладья{% endblock %}
+{% block content %}
+<section class="wide admin">
+  <div class="pagehead"><div><h2>Админка</h2><p class="muted">Видна только администраторам. Все действия записываются в журнал.</p></div></div>
+  <div class="tabs admtabs">
+    <a href="{{ url_for('admin.index') }}" class="{{ 'on' if tab == 'index' }}">Обзор</a>
+    <a href="{{ url_for('admin.users') }}" class="{{ 'on' if tab == 'users' }}">Пользователи</a>
+    <a href="{{ url_for('admin.clubs') }}" class="{{ 'on' if tab == 'clubs' }}">Клубы</a>
+    <a href="{{ url_for('admin.tournaments') }}" class="{{ 'on' if tab == 'tournaments' }}">Турниры</a>
+    <a href="{{ url_for('admin.reports') }}" class="{{ 'on' if tab == 'reports' }}">Жалобы</a>
+    <a href="{{ url_for('admin.logins') }}" class="{{ 'on' if tab == 'logins' }}">Журнал</a>
+  </div>
+  {% block admin %}{% endblock %}
+</section>
+{% endblock %}
