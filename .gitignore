@@ -1,0 +1,11 @@
+# база данных и секретный ключ — никогда не выкладывать
+instance/
+*.db
+secret.key
+# служебное
+__pycache__/
+*.pyc
+.venv/
+venv/
+.vscode/
+.idea/

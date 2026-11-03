@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Профиль — Ладья{% endblock %}
+{% block content %}
+<section class="panel profile">
+  <div class="phead">
+    <button id="avabtn" class="bigava" type="button" title="Сменить аватарку"><img id="avaimg" src="{{ avatar }}" alt=""><span>✎</span></button>
+    <div><h2>{{ user.nick }}</h2><p class="rating-big">🏆 <b>{{ user.rating }}</b> Elo · <a href="{{ url_for('leaderboard') }}">рейтинг клуба</a></p><p class="muted">В клубе с {{ user.created[:10] }}</p></div>
+  </div>
+  <div id="avapick" class="avapick hidden">
+    <div class="lbl">Выбери аватарку</div>
+    <div class="avagrid">
+      {% for p in presets %}<button data-p="{{ p }}" class="{{ 'on' if user.avatar == p }}"><img src="{{ url_for('static', filename='avatars/' ~ p ~ '.svg') }}" alt=""></button>{% endfor %}
+    </div>
+    <label class="btn ghost upl">📷 Загрузить свою картинку<input id="avafile" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+    <p id="avamsg" class="muted"></p>
+  </div>
+  <div class="stats">
+    <div><b>{{ stats.get('win',0) }}</b>побед</div>
+    <div><b>{{ stats.get('draw',0) }}</b>ничьих</div>
+    <div><b>{{ stats.get('loss',0) }}</b>поражений</div>
+    <div><b>{{ solved }}/{{ total }}</b>задач</div>
+  </div>
+  <h3>Последние партии</h3>
+  <div class="games">
+  {% for r in recent %}
+    <div><span>{{ r.created[:10] }} · {% if r.mode == 'online' %}🌐 онлайн: {{ r.opp }} ({{ r.bot }}){% elif r.mode == 'coach' %}тренер Альберт ({{ r.bot }}){% else %}бот {{ r.bot }} Elo{% endif %}</span><b class="{{ r.result }}">{{ {'win':'победа','loss':'поражение','draw':'ничья'}[r.result] }}{% if r.delta %} <small class="delta">{{ '%+d' % r.delta }}</small>{% endif %}</b></div>
+  {% else %}<p class="muted">Пока нет партий. <a href="{{ url_for('play') }}">Сыграть первую</a></p>{% endfor %}
+  </div>
+
+  <details class="settings">
+    <summary>⚙ Настройки аккаунта</summary>
+    <form method="post" action="{{ url_for('change_password') }}" class="sform">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <b>Сменить пароль</b>
+      <input name="old" type="password" placeholder="Текущий пароль" required autocomplete="current-password">
+      <input name="new" type="password" placeholder="Новый пароль (от {{ pw_min }} символов)" required minlength="{{ pw_min }}" maxlength="128" autocomplete="new-password">
+      <input name="new2" type="password" placeholder="Новый пароль ещё раз" required minlength="{{ pw_min }}" maxlength="128" autocomplete="new-password">
+      <button class="btn ghost">Сменить пароль</button>
+    </form>
+    <form method="post" action="{{ url_for('delete_account') }}" class="sform danger-zone">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <b>Удалить аккаунт</b>
+      <span class="muted">Удалятся профиль, рейтинг, партии и аватарка. Это нельзя отменить.</span>
+      <input name="password" type="password" placeholder="Пароль для подтверждения" required autocomplete="current-password">
+      <button class="btn danger">Удалить аккаунт навсегда</button>
+    </form>
+  </details>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/profile.js') }}"></script>{% endblock %}

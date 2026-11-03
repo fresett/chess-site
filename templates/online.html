@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Онлайн — Ладья{% endblock %}
+{% block content %}
+<div class="stage" data-me="{{ me.name if me else '' }}" data-guest="{{ 1 if me and me.guest else 0 }}">
+  <div class="boardwrap">
+    <div class="pl"><span class="nm" id="top"></span><span class="clk hidden" id="ctop"></span></div>
+    <div id="board" class="board"></div>
+    <div class="pl"><span class="nm" id="bottom"></span><span class="clk hidden" id="cbot"></span></div>
+  </div>
+
+  <aside id="lobby" class="panel side">
+    <div id="modes" class="tabs">
+      <a href="{{ url_for('play', mode='bot') }}">🤖 Бот</a><a href="{{ url_for('play', mode='coach') }}">🎓 Тренер</a><a href="{{ url_for('play', mode='local') }}">👥 Оффлайн</a><a class="on">🌐 Онлайн</a>
+    </div>
+    <h2>Онлайн-игра</h2>
+    <div class="onstats"><span><i class="dot"></i><b id="sOnline">–</b> на сайте</span><span>🔎 <b id="sSearch">–</b> ищут игру</span><span>♟ <b id="sPlay">–</b> играют</span></div>
+
+    {% if not me %}
+    <div class="who-box">
+      <p>Чтобы играть онлайн, войди в аккаунт — партии будут идти в рейтинг клуба. Или зайди как гость (без рейтинга).</p>
+      <form method="post" action="{{ url_for('guest') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="next" value="/online"><button class="btn big">👋 Играть как гость</button></form>
+      <div class="row"><a class="btn ghost" href="{{ url_for('login') }}">Войти</a><a class="btn ghost" href="{{ url_for('register') }}">Регистрация</a></div>
+    </div>
+    {% else %}
+    <p class="muted who-line">Ты играешь как <b>{{ me.name }}</b>{% if me.guest %} (гость, без рейтинга) · <a href="{{ url_for('register') }}">зарегистрироваться</a>{% else %} · рейтинг {{ me.rating }}{% endif %}</p>
+    <div id="seekbox">
+      <div class="lbl">Время на партию</div>
+      <div id="tcs" class="seg"><button data-t="180">Блиц<small>3 мин</small></button><button data-t="300" class="on">Блиц<small>5 мин</small></button><button data-t="600">Рапид<small>10 мин</small></button></div>
+      <button id="find" class="btn big">🔎 Найти соперника</button>
+    </div>
+    <div id="searching" class="searching hidden">
+      <div class="spinner"></div>
+      <div><b>Ищем соперника…</b><span id="waited" class="muted">0:00</span></div>
+      <button id="cancel" class="btn ghost">Отмена</button>
+    </div>
+    <p class="muted small">Совет: чтобы проверить игру одному, открой второе окно в режиме инкогнито (Ctrl+Shift+N) и зайди там другим аккаунтом или гостем.</p>
+    {% endif %}
+  </aside>
+
+  <aside id="side" class="panel side hidden">
+    <div id="status" class="status"></div>
+    <div id="offer" class="offer hidden"><span>🤝 Соперник предлагает ничью</span><div class="row"><button id="oyes" class="btn">Принять</button><button id="ono" class="btn ghost">Отклонить</button></div></div>
+    <div id="moves" class="moves"></div>
+    <div class="row">
+      <button id="flip" class="btn ghost">⇅ Перевернуть</button>
+      <button id="draw" class="btn ghost">🤝 Ничья</button>
+      <button id="resign" class="btn ghost">🏳 Сдаться</button>
+      <button id="again" class="btn hidden">🔎 Новый соперник</button>
+    </div>
+  </aside>
+</div>
+<div id="confirm" class="modal hidden"><div class="mbox confirm">
+  <div class="mhead"><h2 id="cfh">Сдаться?</h2><p id="ctitle">Партия будет засчитана как поражение</p></div>
+  <div class="mbtns"><div class="row"><button id="cno" class="btn ghost">Продолжить игру</button><button id="cyes" class="btn danger">🏳 Сдаться</button></div></div>
+</div></div>
+<div id="modal" class="modal hidden"><div id="mbox" class="mbox">
+  <button id="mclose" class="x" title="Закрыть">✕</button>
+  <div class="mhead"><h2 id="mtitle"></h2><p id="msub"></p></div>
+  <div id="mrating" class="mrating hidden"></div>
+  <div class="mbtns"><button id="mnew" class="btn big">🔎 Новый соперник</button><button id="mview" class="btn ghost">Посмотреть доску</button></div>
+</div></div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chess.js') }}"></script>
+<script src="{{ url_for('static', filename='js/board.js') }}"></script>
+<script src="{{ url_for('static', filename='js/online.js') }}"></script>
+{% endblock %}

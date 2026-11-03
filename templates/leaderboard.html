@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Рейтинг клуба — Ладья{% endblock %}
+{% block content %}
+<section class="board-page">
+  <div class="champs-head">
+    <h2>Рейтинг клуба</h2>
+    <p class="muted">Все начинают со 100 Elo. Победа над ботом или тренером: +7…+11, поражение: −7…−12. Чем сильнее соперник, тем больше очков за победу.</p>
+  </div>
+  {% if players %}
+  <div class="lb">
+    <div class="lbrow lbhead"><span>#</span><span>Игрок</span><span>Рейтинг</span><span class="hide-sm">Партий</span><span class="hide-sm">Побед</span><span class="hide-sm">Задач</span></div>
+    {% for p in players %}
+    <div class="lbrow{{ ' me' if user and user.id == p.id }}{{ ' top' ~ loop.index if loop.index <= 3 }}">
+      <span class="pos">{{ ['🥇','🥈','🥉'][loop.index0] if loop.index <= 3 else loop.index }}</span>
+      <span class="who"><img src="{{ p.ava }}" alt="">{{ p.nick }}{% if user and user.id == p.id %} <small>(ты)</small>{% endif %}</span>
+      <span class="rt">{{ p.rating }}</span>
+      <span class="hide-sm">{{ p.games }}</span><span class="hide-sm">{{ p.wins }}</span><span class="hide-sm">{{ p.puzzles }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="muted center">Пока никого нет — <a href="{{ url_for('register') }}">зарегистрируйся</a> первым!</p>
+  {% endif %}
+  {% if not user %}<p class="muted center">Чтобы попасть в таблицу, <a href="{{ url_for('register') }}">создай аккаунт</a> и сыграй партию.</p>{% endif %}
+</section>
+{% endblock %}

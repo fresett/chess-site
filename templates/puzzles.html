@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Задачи — Ладья{% endblock %}
+{% block content %}
+<div class="stage">
+  <div class="boardwrap solo"><div id="board" class="board"></div></div>
+  <aside class="panel side">
+    <h2 id="ptitle">Задачи</h2>
+    <div id="status" class="status"></div>
+    <div id="plist" class="plist"></div>
+    <div class="row">
+      <button id="hint" class="btn ghost">💡 Подсказка</button>
+      <button id="reset" class="btn ghost">↺ Заново</button>
+      <button id="next" class="btn">Дальше →</button>
+    </div>
+    {% if not user %}<p class="muted">Войди, чтобы сохранять решённые задачи.</p>{% endif %}
+  </aside>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chess.js') }}"></script>
+<script src="{{ url_for('static', filename='js/board.js') }}"></script>
+<script src="{{ url_for('static', filename='js/puzzles.js') }}"></script>
+{% endblock %}

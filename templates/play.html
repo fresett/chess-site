@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Играть — Ладья{% endblock %}
+{% block content %}
+<div class="stage" data-name="{{ user.nick if user else 'Ты' }}" data-rating="{{ user.rating if user else '' }}" data-avatar="{{ avatar or url_for('static', filename='avatars/a1.svg') }}" data-albert="{{ url_for('static', filename='avatars/albert.svg') }}">
+  <div class="boardwrap">
+    <div class="pl"><span class="nm" id="top"></span><span class="clk" id="ctop"></span></div>
+    <div id="board" class="board"></div>
+    <div class="pl"><span class="nm" id="bottom"></span><span class="clk" id="cbot"></span></div>
+  </div>
+  <aside id="setup" class="panel side">
+    <div id="modes" class="tabs">
+      <button data-m="bot">🤖 Бот</button><button data-m="coach">🎓 Тренер</button><button data-m="local">👥 Оффлайн</button><a href="{{ url_for('online_page') }}">🌐 Онлайн</a>
+    </div>
+    <p id="mdesc" class="muted mdesc"></p>
+    <div class="m-bot"><div class="lbl">Соперник</div><div id="bots" class="bots"></div></div>
+    <div class="m-coach coachcard">
+      <img src="{{ url_for('static', filename='avatars/albert.svg') }}" alt="">
+      <div><b>Тренер Альберт</b><span>Оценивает каждый твой ход, подсказывает, предупреждает об угрозах и даёт переходить.</span></div>
+    </div>
+    <div class="m-coach"><div class="lbl">С какой силой играет Альберт</div>
+      <div id="clevel" class="seg"><button data-l="0">Новичок<small>~600</small></button><button data-l="1" class="on">Любитель<small>~1200</small></button><button data-l="2">Сильный<small>~1800</small></button></div>
+    </div>
+    <div class="m-bot m-coach"><div class="lbl">Твой цвет</div>
+      <div id="colors" class="seg"><button data-c="w" class="on">Белые</button><button data-c="r">Случайно</button><button data-c="b">Чёрные</button></div>
+    </div>
+    <div class="m-bot m-local"><div class="lbl">Время</div>
+      <div id="times" class="seg">
+        <button data-t="600" class="on">Рапид<small>10 мин</small></button><button data-t="300">Блиц<small>5 мин</small></button><button data-t="60">Пуля<small>1 мин</small></button><button data-t="0">Без часов</button>
+      </div>
+    </div>
+    <label class="check m-bot m-local"><input type="checkbox" id="allowUndo" checked><span>Разрешить отмену ходов</span></label>
+    <label class="check m-local"><input type="checkbox" id="autoFlip"><span>Переворачивать доску после каждого хода</span></label>
+    <button id="start" class="btn big">Начать партию</button>
+  </aside>
+  <aside id="side" class="panel side hidden">
+    <div id="status" class="status">Твой ход</div>
+    <div id="offer" class="offer hidden"><span id="offertext"></span><div class="row"><button id="oyes" class="btn">🤝 Принять</button><button id="ono" class="btn ghost">Отклонить</button></div></div>
+    <div id="coach" class="coachbox hidden">
+      <img src="{{ url_for('static', filename='avatars/albert.svg') }}" alt="Тренер Альберт">
+      <div class="cbub">
+        <button id="cvoice" class="vbtn" type="button">🔊</button>
+        <p id="ctext">Удачи! Я буду следить за каждым твоим ходом.</p>
+        <div id="cchoice" class="row hidden"><button id="ctake" class="btn">↩ Переходить</button><button id="cgo" class="btn ghost">Продолжить</button></div>
+      </div>
+    </div>
+    <div id="evalbox" class="evalbox hidden"><div class="evalbar"><i id="evalfill"></i></div><span id="evaltext">Позиция равная</span></div>
+    <div id="moves" class="moves"></div>
+    <div class="row">
+      <button id="hint" class="btn ghost hidden">💡 Подсказка</button>
+      <button id="undo" class="btn ghost">↩ Отменить</button>
+      <button id="flip" class="btn ghost">⇅ Перевернуть</button>
+      <button id="draw" class="btn ghost">🤝 Ничья</button>
+      <button id="resign" class="btn ghost">🏳 Сдаться</button>
+      <button id="again" class="btn">Новая партия</button>
+    </div>
+  </aside>
+</div>
+<div id="confirm" class="modal hidden"><div class="mbox confirm">
+  <div class="mhead"><h2 id="cfh">Сдаться?</h2><p id="ctitle">Партия будет засчитана как поражение</p></div>
+  <div class="mbtns"><div class="row"><button id="cno" class="btn ghost">Продолжить игру</button><button id="cyes" class="btn danger">🏳 Сдаться</button></div></div>
+</div></div>
+<div id="modal" class="modal hidden"><div id="mbox" class="mbox">
+  <button id="mclose" class="x" title="Закрыть">✕</button>
+  <div class="mhead"><h2 id="mtitle"></h2><p id="msub"></p></div>
+  <div class="mbody"><div id="mav" class="avatar"></div><div id="mtext" class="bubble"></div></div>
+  <div id="mrating" class="mrating hidden"></div>
+  <div class="mbtns"><button id="rematch" class="btn big">Реванш</button>
+    <div class="row"><button id="mnew" class="btn ghost">Изменить настройки</button><button id="mview" class="btn ghost">Посмотреть доску</button></div></div>
+</div></div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chess.js') }}"></script>
+<script src="{{ url_for('static', filename='js/board.js') }}"></script>
+<script src="{{ url_for('static', filename='js/play.js') }}"></script>
+{% endblock %}

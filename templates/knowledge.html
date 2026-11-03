@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Познания — Ладья{% endblock %}
+{% block content %}
+<div class="ktabs tabs" id="ktabs">
+  <button data-k="openings" class="on">📚 Дебюты</button><button data-k="champions">👑 Чемпионы мира</button>
+</div>
+
+<section id="k-openings">
+<div class="stage">
+  <div class="boardwrap solo kboard"><div id="board" class="board"></div></div>
+  <aside class="panel side training">
+    <div>
+      <h2>Дебюты</h2>
+      <p class="muted sub">Смотри, как разыгрываются дебюты, и тренируй их ходы вместе с тренером Альбертом.</p>
+    </div>
+    <div>
+      <div class="lbl">Играю за</div>
+      <div id="sides" class="seg"><button data-s="w" class="on">♔ Белых</button><button data-s="b">♚ Чёрных</button></div>
+    </div>
+    <div id="tabs" class="tabs"><button data-t="top" class="on">🏆 Топ-10 Альберта</button><button data-t="all">📚 Топ-300</button></div>
+    <input id="q" class="hidden" type="search" placeholder="Поиск: «сицилианская», «Найдорф», «C50»…" autocomplete="off">
+    <div id="olist" class="olist"></div>
+    <div id="ocard" class="ocard hidden">
+      <div class="ohead"><span id="oeco" class="eco"></span><div><b id="oname"></b><small id="oen"></small></div></div>
+      <div id="onote" class="coachbox hidden"><img src="{{ url_for('static', filename='avatars/albert.svg') }}" alt="Тренер Альберт"><div class="cbub"><button id="ovoice" class="vbtn" type="button">🔊</button><p id="onotet"></p></div></div>
+      <div id="omoves" class="omoves"></div>
+      <div class="ctrls">
+        <button id="first" class="btn ghost" title="В начало">⏮</button><button id="prev" class="btn ghost" title="Назад (←)">◀</button>
+        <button id="auto" class="btn ghost" title="Проиграть">▶ Показать</button>
+        <button id="next" class="btn ghost" title="Вперёд (→)">▶</button><button id="last" class="btn ghost" title="В конец">⏭</button>
+      </div>
+      <div class="speed"><span class="lbl">Скорость</span>
+        <div id="speed" class="seg mini"><button data-ms="2200">🐢 Медленно</button><button data-ms="1300">Обычно</button><button data-ms="650">🐇 Быстро</button></div>
+      </div>
+      <button id="practice" class="btn">🎯 Тренироваться</button>
+      <div id="tstatus" class="status"></div>
+    </div>
+  </aside>
+</div>
+</section>
+
+<section id="k-champions" class="hidden">
+  <div class="champs-head">
+    <h2>Чемпионы мира</h2>
+    <p class="muted">Все 18 бесспорных чемпионов мира по шахматам — от первого, Вильгельма Стейница, до Доммараджу Гукеша. Наведи на портрет и нажми «Биография».</p>
+  </div>
+  <div id="champs" class="champs"></div>
+  <p class="muted credits">Фотографии — Wikimedia Commons, свободные лицензии (автор и лицензия указаны в биографии).</p>
+</section>
+
+<div id="bio" class="modal hidden"><div class="mbox biobox">
+  <button class="x" id="bioclose" title="Закрыть">✕</button>
+  <div class="biohead"><img id="biophoto" alt=""><div><span id="bionum" class="bnum"></span><h2 id="bioname"></h2><p id="bionick" class="bnick"></p><p id="biometa" class="muted"></p></div></div>
+  <div id="biotext" class="biotext"></div>
+  <p class="muted bcredit"><a id="biosrc" target="_blank" rel="noopener noreferrer"></a></p>
+</div></div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chess.js') }}"></script>
+<script src="{{ url_for('static', filename='js/board.js') }}"></script>
+<script src="{{ url_for('static', filename='js/training.js') }}"></script>
+<script src="{{ url_for('static', filename='js/champions.js') }}"></script>
+{% endblock %}

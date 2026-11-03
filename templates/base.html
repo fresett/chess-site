@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="csrf" content="{{ csrf }}">
+<title>{% block title %}Ладья — шахматный клуб{% endblock %}</title>
+<link rel="icon" href="{{ url_for('static', filename='logo.svg') }}" type="image/svg+xml">
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body data-auth="{{ 1 if user else 0 }}">
+<svg class="sprite" aria-hidden="true">
+  <symbol id="i-rook" viewBox="0 0 24 24"><path d="M5 3h3v2.5h2.5V3h3v2.5H16V3h3v5l-2.5 2v6.5L18 18v1H6v-1l1.5-1.5V10L5 8z"/><rect x="4" y="19.6" width="16" height="2.4" rx="1"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="5.8" r="3.3"/><path d="M8.6 10.6h6.8l-1.1 2.3c1.7 1.4 2.7 3.5 2.8 6H6.9c.1-2.5 1.1-4.6 2.8-6z"/><rect x="5" y="19.6" width="14" height="2.8" rx="1.2"/></symbol>
+  <symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M9.5 4.5a2.5 2.5 0 0 1 5 0V6H18a1 1 0 0 1 1 1v3.5h-1.5a2.5 2.5 0 0 0 0 5H19V19a1 1 0 0 1-1 1h-3.5v-1.5a2.5 2.5 0 0 0-5 0V20H6a1 1 0 0 1-1-1v-3.5h1.5a2.5 2.5 0 0 0 0-5H5V7a1 1 0 0 1 1-1h3.5z"/></symbol>
+  <symbol id="i-cup" viewBox="0 0 24 24"><path d="M6 3h12v2h3v3a4.5 4.5 0 0 1-4.3 4.5A6 6 0 0 1 13 15.9V18h3v3H8v-3h3v-2.1a6 6 0 0 1-3.7-3.4A4.5 4.5 0 0 1 3 8V5h3zm0 4H5v1a2.5 2.5 0 0 0 1.4 2.2A6 6 0 0 1 6 9zm12 0v2c0 .4 0 .8-.1 1.2A2.5 2.5 0 0 0 19 8V7z"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2.5a9.5 9.5 0 1 1 0 19 9.5 9.5 0 0 1 0-19zM10.8 10h2.4v7.5h-2.4zm1.2-4.2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/></symbol>
+  <symbol id="i-book"viewBox="0 0 24 24"><path d="M3 5.2C5.6 4 8.8 4 11 5.6v14.2c-2.2-1.5-5.4-1.5-8-.3zM21 5.2C18.4 4 15.2 4 13 5.6v14.2c2.2-1.5 5.4-1.5 8-.3z"/></symbol>
+  <symbol id="i-user"viewBox="0 0 24 24"><circle cx="12" cy="7.8" r="4.3"/><path d="M3.6 21.2c.3-4.6 3.9-7.5 8.4-7.5s8.1 2.9 8.4 7.5z"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><path d="M7.5 6.5a5.5 5.5 0 1 0 5.2 7.3H15v2.7h2.6v-2.7h1.2v2.2h2.6v-4.8h-8.7A5.5 5.5 0 0 0 7.5 6.5zm0 3.3a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.5l2.5 6.6 6.9.6-5.3 4.5 1.7 6.8L12 17.3 6.2 21l1.7-6.8L2.6 9.7l6.9-.6z"/></symbol>
+  <symbol id="i-palette" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2.8a9.2 9.2 0 0 0 0 18.4c1.3 0 2.1-.8 2.1-1.9 0-.5-.2-.9-.5-1.2-.3-.4-.5-.8-.5-1.3 0-1 .8-1.9 1.9-1.9h2.2a4.1 4.1 0 0 0 4-4.1c0-4.4-4.1-8-9.2-8zM6.9 12.6a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2zm3-4a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2zm5 0a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2z"/></symbol>
+  <symbol id="i-sound" viewBox="0 0 24 24"><path d="M3 9h4l5-4.2v14.4L7 15H3z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.3 5.8a9 9 0 0 1 0 12.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-mute" viewBox="0 0 24 24"><path d="M3 9h4l5-4.2v14.4L7 15H3z"/><path d="M15.5 9.5l5 5m0-5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-exit" viewBox="0 0 24 24"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3h7A1.5 1.5 0 0 1 14 4.5V8h-2V5H6v14h6v-3h2v3.5a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 4 19.5z"/><path d="M10 12h10m-3.5-3.5L20 12l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+{% set ep = request.endpoint %}
+<div class="layout">
+<aside class="rail">
+  <a class="brand" href="{{ url_for('index') }}" title="Ладья — на главную"><span class="mark"><svg><use href="#i-rook"/></svg></span><b>Ладья</b></a>
+  <nav>
+    <div class="has-fly">
+      <a href="{{ url_for('play') }}" class="{{ 'on' if ep in ('play', 'online_page') }}"><svg><use href="#i-play"/></svg><span>Играть</span></a>
+      <div class="fly">
+        <a href="{{ url_for('online_page') }}"><em>🌐</em><span><b>Онлайн</b><small>Живой соперник с сайта</small></span></a>
+        <a href="{{ url_for('play', mode='bot') }}"><em>🤖</em><span><b>С ботом</b><small>5 соперников, 200–2000 Elo</small></span></a>
+        <a href="{{ url_for('play', mode='coach') }}"><em>🎓</em><span><b>С тренером</b><small>Альберт оценивает твои ходы</small></span></a>
+        <a href="{{ url_for('play', mode='local') }}"><em>👥</em><span><b>Оффлайн</b><small>Вдвоём на одном устройстве</small></span></a>
+      </div>
+    </div>
+    <a href="{{ url_for('puzzles') }}" class="{{ 'on' if ep == 'puzzles' }}"><svg><use href="#i-puzzle"/></svg><span>Задачи</span></a>
+    <a href="{{ url_for('knowledge') }}" class="{{ 'on' if ep == 'knowledge' }}"><svg><use href="#i-book"/></svg><span>Познания</span></a>
+    <a href="{{ url_for('leaderboard') }}" class="{{ 'on' if ep == 'leaderboard' }}"><svg><use href="#i-cup"/></svg><span>Рейтинг</span></a>
+    {% if user %}
+      <a href="{{ url_for('profile') }}" class="{{ 'on' if ep == 'profile' }}" title="{{ user.nick }}"><img class="rava" src="{{ avatar }}" alt=""><span>Профиль</span></a>
+    {% else %}
+      <a href="{{ url_for('login') }}" class="{{ 'on' if ep == 'login' }}"><svg><use href="#i-key"/></svg><span>Вход</span></a>
+      <a href="{{ url_for('register') }}" class="{{ 'on' if ep == 'register' }}"><svg><use href="#i-star"/></svg><span>Регистрация</span></a>
+    {% endif %}
+  </nav>
+  <div class="rail-bottom">
+    <button id="design" type="button"><svg><use href="#i-palette"/></svg><span>Дизайн</span></button>
+    <button id="sound" type="button"><svg><use href="#i-sound"/></svg><span>Звук</span></button>
+    <a href="{{ url_for('about') }}" class="{{ 'on' if ep == 'about' }}"><svg><use href="#i-info"/></svg><span>О сайте</span></a>
+    {% if user %}
+    <form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button><svg><use href="#i-exit"/></svg><span>Выйти</span></button></form>
+    {% endif %}
+  </div>
+</aside>
+<main>
+  {% for cat, m in get_flashed_messages(with_categories=true) %}<div class="flash{{ ' ok' if cat == 'ok' }}">{{ m }}</div>{% endfor %}
+  {% block content %}{% endblock %}
+</main>
+</div>
+<div id="dmodal" class="modal hidden"><div class="mbox dbox">
+  <button class="x dclose" title="Закрыть">✕</button>
+  <h2>Дизайн</h2>
+  <div class="lbl">Фигуры</div>
+  <div class="dopts">
+    <button data-k="pieces" data-v="classic"><span class="pv"></span>Классика</button>
+    <button data-k="pieces" data-v="wood"><span class="pv"></span>Дерево</button>
+    <button data-k="pieces" data-v="flat"><span class="pv"></span>Минимал</button>
+  </div>
+  <div class="lbl">Доска</div>
+  <div class="dopts">
+    <button data-k="board" data-v="amber"><span class="bv bv-amber"></span>Янтарь</button>
+    <button data-k="board" data-v="ice"><span class="bv bv-ice"></span>Лёд</button>
+    <button data-k="board" data-v="emerald"><span class="bv bv-emerald"></span>Изумруд</button>
+  </div>
+  <div class="lbl">Фон</div>
+  <div class="dopts">
+    <button data-k="bg" data-v="ink"><span class="gv gv-ink"><b></b><b></b></span>Чернила</button>
+    <button data-k="bg" data-v="paper"><span class="gv gv-paper"><b></b><b></b></span>Бумага</button>
+    <button data-k="bg" data-v="graphite"><span class="gv gv-graphite"><b></b><b></b></span>Графит</button>
+  </div>
+  <div class="lbl">Звуки</div>
+  <div class="dopts">
+    <button data-k="sound" data-v="classic"><span class="sv">♪</span>Классика</button>
+    <button data-k="sound" data-v="wood"><span class="sv">🪵</span>Дерево</button>
+    <button data-k="sound" data-v="chime"><span class="sv">🔔</span>Колокольчики</button>
+  </div>
+  <div id="vrow" class="vrow">
+    <div class="lbl">Голос тренера Альберта</div>
+    <div class="vpick"><select id="vsel" aria-label="Голос Альберта"></select><button id="vtest" class="btn ghost" type="button">▶ Прослушать</button></div>
+    <p class="muted vhint">★ — нейросетевые голоса, звучат живее всего. Лучший мужской голос — «Dmitry (Natural)» в браузере Edge.</p>
+  </div>
+</div></div>
+<script src="{{ url_for('static', filename='js/sound.js') }}"></script>
+<script src="{{ url_for('static', filename='js/voice.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
