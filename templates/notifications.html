@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Уведомления — Ладья{% endblock %}
+{% block content %}
+<section class="panel narrow">
+  <h2>Уведомления</h2>
+  <div class="list">
+  {% for n in items %}
+    <div class="lrow{{ ' unread' if not n.read }}">
+      <span class="lic">{{ {'challenge':'⚔','tournament':'🏆','club':'🏠'}.get(n.kind, '🔔') }}</span>
+      <span class="grow">{% if n.url %}<a href="{{ n.url }}">{{ n.text }}</a>{% else %}{{ n.text }}{% endif %}</span>
+      <small class="muted">{{ n.ts|dt }}</small>
+    </div>
+  {% else %}
+    <p class="muted empty-state">Пока ничего нет. Здесь появятся вызовы на партию, начало туров и ответы на заявки в клубы.</p>
+  {% endfor %}
+  </div>
+</section>
+{% endblock %}

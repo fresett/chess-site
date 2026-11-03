@@ -4,18 +4,30 @@
   <div>
     <span class="kicker">Шахматный клуб «Ладья»</span>
     <h1>Сделай ход.<br><em>Клуб ждёт.</em></h1>
-    <p>Играй с ботами, учись у тренера Альберта или зови друга за одну доску. Разбирай дебюты, решай задачи на мат и следи за прогрессом.</p>
+    <p>Играй онлайн с живыми соперниками и с ботами, учись у тренера Альберта, участвуй в турнирах клуба. Разбирай дебюты, решай задачи и следи за прогрессом.</p>
     <div class="acts">
-      <a class="btn" href="{{ url_for('play') }}">Начать партию</a>
-      <a class="btn ghost" href="{{ url_for('puzzles') }}">Решать задачи</a>
+      <a class="btn" href="{{ url_for('pages.play') }}">Начать партию</a>
+      <a class="btn ghost" href="{{ url_for('online.lobby') }}">🌐 Онлайн</a>
     </div>
   </div>
   <div class="showcase" aria-hidden="true"><img data-piece="wn" src="/static/pieces/wn.svg" alt=""><img data-piece="bq" src="/static/pieces/bq.svg" alt=""><img data-piece="wk" src="/static/pieces/wk.svg" alt=""><img data-piece="br" src="/static/pieces/br.svg" alt=""></div>
 </section>
+<section class="today">
+  <a class="card pod" href="{{ url_for('pages.puzzles', id=pod.id) }}"><span class="lbl">🧩 Задача дня</span><h3>{{ pod.title }}</h3><p>Мат в {{ pod.mate }} {{ 'ход' if pod.mate == 1 else 'хода' }} · сложность {{ pod.rating }}</p></a>
+  <div class="card tours">
+    <span class="lbl">🏆 Турниры</span>
+    {% for t in upcoming %}
+      <a href="{{ url_for('tournaments.view', tid=t.id) }}"><b>{{ t.name }}</b><small>{{ 'идёт' if t.status == 'running' else 'регистрация' }} · {{ 'онлайн' if t.mode == 'online' else 'очно' }}{% if t.club %} · {{ t.club }}{% endif %}</small></a>
+    {% else %}
+      <p class="muted">Сейчас турниров нет.{% if is_coach %} <a href="{{ url_for('tournaments.new') }}">Создать турнир</a>{% endif %}</p>
+    {% endfor %}
+  </div>
+</section>
 <section class="cards stagger">
-  <a class="card" href="{{ url_for('play') }}"><span class="ic"><svg><use href="#i-play"/></svg></span><h3>Пять соперников</h3><p>Боты от 200 до 2000 Elo, с часами или без.</p></a>
-  <a class="card" href="{{ url_for('puzzles') }}"><span class="ic"><svg><use href="#i-puzzle"/></svg></span><h3>25 задач</h3><p>Маты в 1–2 хода: от лесенки до наследства Филидора.</p></a>
-  <a class="card" href="{{ url_for('knowledge') }}"><span class="ic"><svg><use href="#i-book"/></svg></span><h3>Познания</h3><p>300 лучших дебютов, топ-10 Альберта и 18 чемпионов мира.</p></a>
-  <a class="card" href="{{ url_for('profile') if user else url_for('register') }}"><span class="ic"><svg><use href="#i-user"/></svg></span><h3>Твой профиль</h3><p>Победы, ничьи, поражения и решённые задачи.</p></a>
+  <a class="card" href="{{ url_for('pages.play') }}"><span class="ic"><svg><use href="#i-play"/></svg></span><h3>Играть</h3><p>Онлайн с людьми (от пули 1+0 до классики), боты от 200 до 2000 Elo, игра вдвоём.</p></a>
+  <a class="card" href="{{ url_for('pages.puzzles') }}"><span class="ic"><svg><use href="#i-puzzle"/></svg></span><h3>25 задач</h3><p>Маты в 1–2 хода: от лесенки до наследства Филидора.</p></a>
+  <a class="card" href="{{ url_for('clubs.index') }}"><span class="ic"><svg><use href="#i-users"/></svg></span><h3>Клубы и турниры</h3><p>Швейцарская система, таблицы с Бухгольцем и Бергером, онлайн и очно.</p></a>
+  <a class="card" href="{{ url_for('pages.knowledge') }}"><span class="ic"><svg><use href="#i-book"/></svg></span><h3>Познания</h3><p>300 лучших дебютов, топ-10 Альберта и 18 чемпионов мира.</p></a>
+  <a class="card" href="{{ url_for('accounts.profile') if user else url_for('accounts.register') }}"><span class="ic"><svg><use href="#i-user"/></svg></span><h3>Твой профиль</h3><p>История партий, рейтинги Glicko-2 по контролям и графики.</p></a>
 </section>
 {% endblock %}

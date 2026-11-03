@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Настройки аккаунта — Ладья{% endblock %}
+{% block content %}
+<section class="panel profile">
+  <h2>Настройки аккаунта</h2>
+  <p class="muted"><a href="{{ url_for('accounts.profile') }}">← Профиль</a> · Аватарку можно сменить, нажав на неё в профиле.</p>
+
+  <form method="post" action="{{ url_for('accounts.change_password') }}" class="sform">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <b>Сменить пароль</b>
+    <label>Текущий пароль<input name="old" type="password" required autocomplete="current-password"></label>
+    <label>Новый пароль (от {{ pw_min }} символов)<input name="new" type="password" required minlength="{{ pw_min }}" maxlength="{{ pw_max }}" autocomplete="new-password"></label>
+    <label>Новый пароль ещё раз<input name="new2" type="password" required minlength="{{ pw_min }}" maxlength="{{ pw_max }}" autocomplete="new-password"></label>
+    <span class="muted small">После смены пароля на других устройствах нужно будет войти заново.</span>
+    <button class="btn ghost">Сменить пароль</button>
+  </form>
+
+  <form method="post" action="{{ url_for('accounts.change_nick') }}" class="sform">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <b>Сменить ник</b>
+    <label>Новый ник<input name="nick" required minlength="3" maxlength="20" value="{{ user.nick }}" pattern="[A-Za-z0-9_А-Яа-яЁё]{3,20}" title="3–20 символов: буквы, цифры и _" autocomplete="username"></label>
+    <label>Пароль для подтверждения<input name="password" type="password" required autocomplete="current-password"></label>
+    <span class="muted small">В уже сыгранных турнирах останется старое имя.</span>
+    <button class="btn ghost">Сменить ник</button>
+  </form>
+
+  <form method="post" action="{{ url_for('accounts.delete_account') }}" class="sform danger-zone">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <b>Удалить аккаунт</b>
+    <span class="muted">Удалятся профиль, рейтинг, партии, аватарка и членство в клубах. В таблицах прошедших турниров останется только имя. Это нельзя отменить.</span>
+    <label>Пароль для подтверждения<input name="password" type="password" required autocomplete="current-password"></label>
+    <button class="btn danger">Удалить аккаунт навсегда</button>
+  </form>
+</section>
+{% endblock %}
