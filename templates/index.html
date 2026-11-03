@@ -28,6 +28,5 @@
   <a class="card" href="{{ url_for('pages.puzzles') }}"><span class="ic"><svg><use href="#i-puzzle"/></svg></span><h3>25 задач</h3><p>Маты в 1–2 хода: от лесенки до наследства Филидора.</p></a>
   <a class="card" href="{{ url_for('clubs.index') }}"><span class="ic"><svg><use href="#i-users"/></svg></span><h3>Клубы и турниры</h3><p>Швейцарская система, таблицы с Бухгольцем и Бергером, онлайн и очно.</p></a>
   <a class="card" href="{{ url_for('pages.knowledge') }}"><span class="ic"><svg><use href="#i-book"/></svg></span><h3>Познания</h3><p>300 лучших дебютов, топ-10 Альберта и 18 чемпионов мира.</p></a>
-  <a class="card" href="{{ url_for('accounts.profile') if user else url_for('accounts.register') }}"><span class="ic"><svg><use href="#i-user"/></svg></span><h3>Твой профиль</h3><p>История партий, рейтинги Glicko-2 по контролям и графики.</p></a>
 </section>
 {% endblock %}

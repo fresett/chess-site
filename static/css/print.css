@@ -4,6 +4,7 @@ body{margin:24px;font:14px/1.4 "Segoe UI",Roboto,Arial,sans-serif;color:#000;bac
 h1{font-size:22px;margin:0 0 2px}h2{font-size:17px;margin:18px 0 8px}
 .sub{margin:0;color:#444}
 table{border-collapse:collapse;width:100%}
+@media screen and (max-width:700px){body{margin:12px}table{display:block;overflow-x:auto}}
 th,td{border:1px solid #888;padding:4px 6px;text-align:center;font-variant-numeric:tabular-nums}
 th{background:#eee}
 td.l,th.l{text-align:left}

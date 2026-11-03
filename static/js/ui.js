@@ -82,3 +82,7 @@ if (live) {
   }, 8000);
 }
 })();
+// подсказки у значков меню (на невысоких экранах подписи скрыты)
+document.querySelectorAll('.rail nav a, .rail-bottom a, .rail-bottom button').forEach(a => {
+  const s = a.querySelector('span'); if (s && !a.title) a.title = s.textContent;
+});

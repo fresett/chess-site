@@ -42,9 +42,14 @@ button{font:inherit;cursor:pointer}
 .rail nav a:hover svg,.rail-bottom button:hover svg,.rail-bottom a:hover svg{transform:translateY(-2px)}
 .rail nav a.on,.rail-bottom a.on{color:var(--accent);background:var(--hover)}
 /* невысокие экраны (ноутбуки): компактное меню, чтобы все пункты помещались */
-@media(max-height:820px) and (min-width:801px){
+@media(max-height:1000px) and (min-width:801px){
   .rail{padding:8px 8px;gap:2px}.brand{padding:0 0 6px;margin-bottom:2px}.brand .mark{width:38px;height:38px}.brand b{display:none}
   .rail nav a,.rail-bottom button,.rail-bottom a{padding:6px 2px 5px}.rail svg,.rava{width:22px;height:22px}
+}
+/* совсем невысокие экраны: только значки (подписи остаются для экранных дикторов) */
+@media(max-height:830px) and (min-width:801px){
+  .rail nav a>span,.rail-bottom a>span,.rail-bottom button>span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .rail nav a,.rail-bottom button,.rail-bottom a{padding:7px 2px}
 }
 .rail nav a.on::before{content:"";position:absolute;left:-8px;top:22%;bottom:22%;width:4px;border-radius:0 4px 4px 0;background:var(--accent)}
 main{flex:1;min-width:0;padding:26px 28px;animation:pageIn .45s cubic-bezier(.2,.8,.2,1) backwards;transition:opacity .2s,transform .2s}
@@ -364,7 +369,7 @@ body.grabbing,body.grabbing *{cursor:grabbing!important}
 
 /* ======================= новые разделы ======================= */
 /* общие элементы */
-.wide{max-width:1100px;margin:0 auto;display:grid;gap:18px}
+.wide{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
 .narrow{max-width:640px;margin:0 auto}
 .center-col{display:grid;gap:14px;justify-items:center;text-align:center}
 .center-col .row{justify-content:center}
@@ -378,7 +383,7 @@ body.grabbing,body.grabbing *{cursor:grabbing!important}
 .prose{white-space:pre-line;line-height:1.6}
 .prose ul{white-space:normal;margin:0;padding-left:20px}.prose h3{margin-top:0}
 .grow{flex:1;min-width:0}
-.tag{display:inline-block;font:700 .7rem/1 inherit;font-family:inherit;padding:4px 8px;border-radius:99px;background:var(--hover);color:var(--muted);vertical-align:middle;letter-spacing:.02em}
+.tag{display:inline-block;font-weight:700;font-size:.7rem;line-height:1;font-family:"Segoe UI",Inter,Roboto,Arial,sans-serif;padding:4px 8px;border-radius:99px;background:var(--hover);color:var(--muted);vertical-align:middle;letter-spacing:.02em}
 .tag.bad{background:rgba(210,75,67,.18);color:#e0675e}.tag.r-admin{background:var(--accent);color:var(--on-accent)}.tag.r-coach{background:rgba(63,170,95,.2);color:#4fb26e}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;background:var(--panel2);font-weight:700;font-size:.9rem;border:1px solid var(--line);color:var(--text)}
 .btnlike{cursor:pointer}.btnlike:hover{border-color:var(--accent)}
@@ -397,7 +402,7 @@ legend{font-weight:800;color:var(--muted);font-size:.9rem;padding:0 6px}
 .wideform{max-width:640px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.copyrow{display:flex;gap:8px;width:100%}.copyrow input{flex:1;min-width:0}
+.copyrow{display:flex;gap:8px;width:100%}.copyrow input{flex:1;min-width:0;width:0}
 .pager{display:flex;gap:10px;justify-content:center;margin-top:12px}
 .cols{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px;align-items:start}
 .panel h3{margin:0 0 12px}
@@ -441,7 +446,7 @@ a.lrow:hover{background:var(--hover)}
 .admin .stats a:hover{background:var(--hover)}
 .admin code{background:var(--panel2);padding:2px 6px;border-radius:6px}
 /* турнир */
-.tstat{display:inline-block;vertical-align:middle;font:700 .8rem/1 inherit;font-family:inherit;padding:5px 10px;border-radius:99px;background:var(--panel2);color:var(--muted);white-space:nowrap}
+.tstat{display:inline-block;vertical-align:middle;font-weight:700;font-size:.8rem;line-height:1;font-family:"Segoe UI",Inter,Roboto,Arial,sans-serif;padding:5px 10px;border-radius:99px;background:var(--panel2);color:var(--muted);white-space:nowrap}
 .tstat.s-running{background:rgba(226,70,60,.16);color:#e0675e}.tstat.s-registration{background:rgba(63,170,95,.16);color:#4fb26e}
 .tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .ttable{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.95rem}
@@ -511,7 +516,7 @@ a.lrow:hover{background:var(--hover)}
 .today .tours p{margin:0}
 .plist button.pod{box-shadow:0 0 0 2px #e9b53a}
 /* уведомления */
-.rail .count{position:absolute;top:4px;right:calc(50% - 22px);min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#d24b43;color:#fff;font:800 .68rem/18px inherit;font-family:inherit;font-style:normal;text-align:center}
+.rail .count{position:absolute;top:4px;right:calc(50% - 22px);min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#d24b43;color:#fff;font-weight:800;font-size:.68rem;line-height:18px;font-style:normal;text-align:center}
 .toast{position:fixed;right:16px;bottom:16px;z-index:100;max-width:min(380px,calc(100vw - 32px));padding:14px 18px;border-radius:14px;background:var(--panel);border:1.5px solid var(--accent);color:var(--text);font-weight:700;box-shadow:0 20px 40px -12px var(--shadow);animation:pop .35s;transition:opacity .5s,transform .5s}
 .toast.out{opacity:0;transform:translateY(10px)}
 .morebtn{display:none!important}
@@ -547,7 +552,8 @@ a.lrow:hover{background:var(--hover)}
   .side{min-width:0;width:100%}
   .pairing{grid-template-columns:22px minmax(0,1fr) auto;grid-template-areas:"bd pw res" "bd pb watch";row-gap:4px}
   .pairing .bd{grid-area:bd}.pairing .pw{grid-area:pw}.pairing .pb{grid-area:pb;text-align:left}.pairing .res,.pairing .resform{grid-area:res}.pairing .watch{grid-area:watch}
-  .phead{flex-wrap:wrap}
+  .phead{flex-wrap:wrap}.phead .grow{flex:1 1 180px}.phead>.btn{width:100%}
+  .bigava{width:76px;height:76px}
   .menu>div{right:-6px;min-width:220px}
   .hide-sm{display:none}
   .palette{grid-template-columns:repeat(7,minmax(0,1fr))}

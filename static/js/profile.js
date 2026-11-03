@@ -19,7 +19,9 @@ function chart(pool) {
   svg.textContent = '';
   document.querySelectorAll('.pool').forEach(b => b.classList.toggle('on', b.dataset.pool === pool));
   const pts = (hist[pool] || []).slice(-200);
-  const W = 600, H = 200, L = 44, R = 10, T = 12, B = 26;
+  // ширина в «пикселях экрана», чтобы подписи не становились крошечными на телефоне
+  const W = Math.max(280, Math.round(svg.getBoundingClientRect().width) || 600), H = 190, L = 44, R = 10, T = 12, B = 26;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   if (pts.length < 2) {
     svg.appendChild(el('text', { x: W / 2, y: H / 2, 'text-anchor': 'middle' }, pts.length ? 'Сыграй ещё хотя бы одну партию — появится график' : `В разделе «${POOLS[pool]}» пока нет партий`));
     $('#charthint').textContent = ''; return;

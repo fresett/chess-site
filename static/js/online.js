@@ -240,6 +240,10 @@ function draw() {
   $('#rematch').classList.toggle('hidden', !canRematch || ro === 'x');
   $('#rematch').disabled = ro === you; $('#rematch').textContent = ro === you ? '🔁 Ждём ответа…' : '🔁 Реванш';
   $('#mrematch').classList.toggle('hidden', !canRematch || ro === 'x');
+  // в окне итога: если соперник уже предложил реванш — кнопка сразу принимает его
+  const theyOffer = canRematch && ro && ro !== you && ro !== 'x';
+  $('#mrematch').textContent = theyOffer ? '✔ Принять реванш' : ro === you ? '🔁 Ждём ответа…' : '🔁 Реванш';
+  $('#mrematch').disabled = ro === you;
   $('#roffer').classList.toggle('hidden', !(canRematch && ((ro && ro !== you) )));
   if (ro === 'x') { $('#rofftext').textContent = 'Реванш отклонён'; $('#rrow').classList.add('hidden'); }
   else { $('#rofftext').textContent = '🔁 Соперник предлагает реванш'; $('#rrow').classList.remove('hidden'); }
@@ -328,7 +332,8 @@ const act = (path, body) => api('/api/online/game/' + GID + '/' + path, body || 
 $('#draw').onclick = () => act('draw', { action: 'offer' });
 $('#oyes').onclick = () => act('draw', { action: 'accept' });
 $('#ono').onclick = () => act('draw', { action: 'decline' });
-$('#rematch').onclick = $('#mrematch').onclick = () => { closeModal(); act('rematch', { action: 'offer' }); };
+$('#rematch').onclick = () => act('rematch', { action: 'offer' });
+$('#mrematch').onclick = () => act('rematch', { action: 'offer' });     // окно не закрываем — там видно ответ
 $('#ryes').onclick = () => act('rematch', { action: 'accept' });
 $('#rno').onclick = () => act('rematch', { action: 'decline' });
 $('#claimwin').onclick = () => act('claim', { action: 'win' });
