@@ -605,7 +605,9 @@ a.lrow:hover{background:var(--hover)}
 :root[data-theme=night] .showcase img{filter:drop-shadow(0 10px 6px rgba(0,0,0,.55))}
 
 /* игровая доска: деревянная рамка с золотым кантом, сукно, объёмные фигуры */
-:root[data-theme=night] .board{border-radius:8px;box-shadow:0 0 0 7px #3a2a14,0 0 0 9px rgba(243,213,139,.4),0 0 0 10px #120c05,0 40px 70px -24px #000}
+:root[data-theme=night] .board{border-radius:8px;box-shadow:0 0 0 2px rgba(243,213,139,.55),0 0 0 9px #4a3418,0 0 0 10px rgba(255,220,150,.12),0 40px 70px -24px #000}
+/* мобильное меню: без отдельной полоски под активным пунктом */
+:root[data-theme=night] .rail nav a.on::before{display:none}
 :root[data-theme=night] .sq.d{background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.07),transparent 60%),var(--bd)}
 :root[data-theme=night] .pc{filter:drop-shadow(0 .9cqw .55cqw rgba(0,0,0,.5))}
 :root[data-theme=night] .sq:hover .pc{transform:translateY(-3%) scale(1.06)}
