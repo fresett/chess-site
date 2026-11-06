@@ -1,0 +1,12 @@
+{% extends "admin/_base.html" %}
+{% block admin %}
+<div class="tabs mini"><a href="{{ url_for('admin.reports') }}" class="{{ 'on' if st != 'closed' }}">Открытые</a><a href="{{ url_for('admin.reports', status='closed') }}" class="{{ 'on' if st == 'closed' }}">Закрытые</a></div>
+<div class="list">
+{% for r in rows %}
+  <div class="lrow"><span class="grow"><b>На {{ r.target_name or '—' }}</b> от {{ r.from_nick or 'гостя' }} · <small class="muted">{{ r.ts|dt }}</small><br>{{ r.reason }}
+    {% if r.game_id %}<br><a href="{{ url_for('online.game_page', gid=r.game_id) }}">Открыть партию</a>{% endif %}</span>
+    {% if r.status == 'open' %}<form method="post" action="{{ url_for('admin.close_report', rid=r.id) }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn ghost sm">Закрыть</button></form>{% endif %}
+  </div>
+{% else %}<p class="muted empty-state">Жалоб нет.</p>{% endfor %}
+</div>
+{% endblock %}

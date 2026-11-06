@@ -1,5 +1,6 @@
 # Точка входа для хостинга (PythonAnywhere и любой WSGI-сервер).
 # Включает боевой режим: защищённые cookies (только HTTPS) и учёт настоящего IP за прокси хостинга.
+# Если перед сайтом стоит Cloudflare, задай в WSGI-файле os.environ["PROXY_HOPS"] = "2" (см. README).
 import os
 import sys
 
@@ -10,4 +11,6 @@ if HERE not in sys.path:
 os.environ.setdefault("PRODUCTION", "1")
 os.environ.setdefault("BEHIND_PROXY", "1")
 
-from app import app as application  # noqa: E402
+from ladya import create_app  # noqa: E402
+
+application = create_app()

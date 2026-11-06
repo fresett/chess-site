@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Настройки турнира' if t else 'Новый турнир' }} — Ладья{% endblock %}
+{% block content %}
+{% set started = t and t.status != 'registration' %}
+<form class="form wideform" method="post">
+  <h2>{{ 'Настройки турнира' if t else 'Новый турнир' }}</h2>
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <label>Название<input name="name" required minlength="3" maxlength="80" value="{{ t.name if t else '' }}" placeholder="Например: Осенний кубок клуба"></label>
+  <label>Описание <span class="muted">(необязательно)</span><textarea name="description" rows="3" maxlength="2000">{{ t.description if t else '' }}</textarea></label>
+  <label>Клуб
+    <select name="club_id"><option value="">Открытый турнир (может записаться любой)</option>
+    {% for c in clubs %}<option value="{{ c.id }}"{{ ' selected' if club_id == c.id }}>{{ c.name }} (только участники клуба)</option>{% endfor %}</select>
+  </label>
+  <div class="grid2">
+    <label>Система
+      <select name="system"{{ ' disabled' if started }}>{% for k, v in SYSTEMS.items() %}<option value="{{ k }}"{{ ' selected' if t and t.system == k }}>{{ v }}</option>{% endfor %}</select>
+    </label>
+    <label>Число туров <span class="muted">(для швейцарки)</span><input name="rounds" type="number" min="1" max="15" value="{{ t.rounds if t else 5 }}" required></label>
+  </div>
+  <div class="grid2">
+    <label>Контроль времени
+      <select name="tc"{{ ' disabled' if started }}>{% for b, i in TCS %}{% set v = b ~ '+' ~ i %}<option value="{{ v }}"{{ ' selected' if (t and t.tc == b and t.inc == i) or (not t and v == '600+5') }}>{{ tc_text(b, i) }} ({{ b // 60 }} мин + {{ i }} с за ход)</option>{% endfor %}</select>
+    </label>
+    <label>Очки за свободный тур (bye)
+      <select name="bye_points">{% for v, n in [(1, '1 очко'), (0.5, '½ очка'), (0, '0 очков')] %}<option value="{{ v }}"{{ ' selected' if (t and t.bye_points == v) or (not t and v == 1) }}>{{ n }}</option>{% endfor %}</select>
+    </label>
+  </div>
+  <fieldset class="radios"{{ ' disabled' if started }}><legend>Где играем</legend>
+    {% for k, v in MODES.items() %}<label class="check"><input type="radio" name="mode" value="{{ k }}"{{ ' checked' if (t and t.mode == k) or (not t and k == 'offline') }}><span>{{ v }}</span></label>{% endfor %}
+  </fieldset>
+  {% if started %}
+    {# отключённые поля не отправляются — передаём текущие значения #}
+    <input type="hidden" name="system" value="{{ t.system }}"><input type="hidden" name="tc" value="{{ t.tc }}+{{ t.inc }}"><input type="hidden" name="mode" value="{{ t.mode }}">
+  {% endif %}
+  <label>Дата и время начала <span class="muted">(необязательно)</span><input name="starts" type="datetime-local" value="{{ t.starts if t and t.starts else '' }}"></label>
+  <p class="muted small">Тай-брейки: усечённый Бухгольц → Бухгольц → Бергер → число побед. В круговом турнире bye даёт 0 очков, а туров столько, сколько нужно, чтобы все сыграли со всеми.</p>
+  <div class="row"><button class="btn">{{ 'Сохранить' if t else 'Создать турнир' }}</button><a class="btn ghost" href="{{ url_for('tournaments.view', tid=t.id) if t else url_for('tournaments.index') }}">Отмена</a></div>
+</form>
+{% endblock %}

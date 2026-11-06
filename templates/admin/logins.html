@@ -1,0 +1,15 @@
+{% extends "admin/_base.html" %}
+{% block admin %}
+<form class="filters" method="get">
+  <input name="q" value="{{ q }}" placeholder="Ник или IP" aria-label="Ник или IP">
+  <label class="check"><input type="checkbox" name="fail" value="1"{{ ' checked' if only_fail }}><span>только неудачные</span></label>
+  <button class="btn sm">Показать</button>
+</form>
+{% if top %}<p class="muted small">Больше всего неудачных входов за сутки: {% for t in top %}<a href="{{ url_for('admin.logins', q=t.ip, fail=1) }}">{{ t.ip }}</a> ({{ t.n }}){{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
+<div class="tablewrap"><table class="ttable">
+  <thead><tr><th>Время</th><th class="l">Ник</th><th>IP</th><th>Итог</th></tr></thead>
+  <tbody>{% for r in rows %}<tr><td>{{ r.ts|dt }}</td><td class="l">{{ r.nick }}</td><td>{{ r.ip }}</td><td>{{ '✔' if r.ok else '✕ ' ~ {'locked':'вход закрыт','lock':'закрыт после ошибок','blocked':'заблокирован','no-user':'нет такого ника'}.get(r.note, 'неверный пароль') }}</td></tr>{% else %}<tr><td colspan="4">Записей нет</td></tr>{% endfor %}</tbody>
+</table></div>
+<h3>Действия администраторов</h3>
+<div class="list">{% for a in actions %}<div class="lrow"><small class="muted">{{ a.ts|dt }}</small><span class="grow">{{ a.nick or '—' }}: {{ a.action }} {{ a.details }}</span></div>{% else %}<p class="muted">Пока пусто.</p>{% endfor %}</div>
+{% endblock %}

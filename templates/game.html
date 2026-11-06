@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Партия — Ладья{% endblock %}
+{% block content %}
+<div class="stage" id="astage" data-fen="" data-view="1">
+  <script type="application/json" id="amoves">{{ moves_json|safe }}</script>
+  <div class="boardwrap">
+    <div class="pl"><span class="nm" id="top"></span></div>
+    <div id="board" class="board"></div>
+    <div class="pl"><span class="nm" id="bottom"></span></div>
+  </div>
+  <aside class="panel side">
+    <h2>Партия</h2>
+    <p class="muted">{{ row.created|dt }} · {{ me }} — {{ opp }} · <b class="{{ row.result }}">{{ {'win':'победа','loss':'поражение','draw':'ничья'}[row.result] }}</b>{% if row.delta %} ({{ '%+d' % row.delta }}){% endif %}</p>
+    <div id="status" class="status small-status"></div>
+    <div id="moves" class="moves"></div>
+    <div class="navrow" id="navrow"><button data-n="first" class="btn ghost" title="В начало">⏮</button><button data-n="prev" class="btn ghost" title="Назад (←)">◀</button><button data-n="next" class="btn ghost" title="Вперёд (→)">▶</button><button data-n="last" class="btn ghost" title="В конец">⏭</button></div>
+    <div class="row"><button id="flip" class="btn ghost">⇅ Перевернуть</button><a class="btn ghost" download href="{{ pgn_url }}">⬇ PGN</a><a class="btn ghost" href="{{ url_for('pages.analysis', game=row.id) }}">🔍 Анализ</a></div>
+  </aside>
+</div>
+<span id="names" class="hidden" data-white="{{ me if row.color != 'b' else opp }}" data-black="{{ opp if row.color != 'b' else me }}"></span>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chess.js') }}"></script>
+<script src="{{ url_for('static', filename='js/board.js') }}"></script>
+<script src="{{ url_for('static', filename='js/analysis.js') }}"></script>
+{% endblock %}

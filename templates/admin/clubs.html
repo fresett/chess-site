@@ -1,0 +1,10 @@
+{% extends "admin/_base.html" %}
+{% block admin %}
+<div class="list">
+{% for c in rows %}
+  <div class="lrow"><span class="grow"><a href="{{ url_for('clubs.view', cid=c.id) }}"><b>{{ c.name }}</b></a><br><small class="muted">владелец {{ c.owner or '—' }} · участников {{ c.n }} · создан {{ c.created|d }}</small></span>
+    <a class="btn ghost sm" href="{{ url_for('clubs.edit', cid=c.id) }}">Изменить</a></div>
+{% else %}<p class="muted empty-state">Клубов нет.</p>{% endfor %}
+</div>
+<p class="muted small">Удалить клуб можно внизу страницы клуба (нужно вписать название).</p>
+{% endblock %}

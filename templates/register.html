@@ -1,15 +1,16 @@
 {% extends "base.html" %}
 {% block title %}Регистрация — Ладья{% endblock %}
 {% block content %}
-<form class="form" method="post">
+<form class="form" method="post" action="{{ url_for('accounts.register', next=request.args.get('next')) }}">
   <h2>Регистрация</h2>
   <p class="muted formsub">Рейтинг, история партий и решённые задачи будут сохраняться в твоём профиле.</p>
   <input type="hidden" name="csrf" value="{{ csrf }}">
   <label>Ник<input name="nick" required minlength="3" maxlength="20" autocomplete="username" pattern="[A-Za-z0-9_А-Яа-яЁё]{3,20}" title="3–20 символов: буквы, цифры и _"></label>
-  <label>Пароль (от 6 символов)<input name="password" type="password" required minlength="6" maxlength="128" autocomplete="new-password"></label>
-  <label>Повтори пароль<input name="password2" type="password" required minlength="6" maxlength="128" autocomplete="new-password"></label>
+  <label>Пароль (от {{ pw_min }} символов)<input name="password" type="password" required minlength="{{ pw_min }}" maxlength="128" autocomplete="new-password"></label>
+  <p class="muted small">Не используй простые пароли вроде 12345678 или qwerty — их подбирают первыми.</p>
+  <label>Повтори пароль<input name="password2" type="password" required minlength="{{ pw_min }}" maxlength="128" autocomplete="new-password"></label>
   <button class="btn">Создать аккаунт</button>
-  <p class="muted small">Мы храним только ник, пароль (в зашифрованном виде) и твои партии. <a href="{{ url_for('about') }}">Подробнее</a></p>
-  <p class="muted">Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a></p>
+  <p class="muted small">Мы храним только ник, пароль (в зашифрованном виде) и твои партии. <a href="{{ url_for('pages.about') }}">Подробнее</a></p>
+  <p class="muted">Уже есть аккаунт? <a href="{{ url_for('accounts.login', next=request.args.get('next')) }}">Войти</a></p>
 </form>
 {% endblock %}

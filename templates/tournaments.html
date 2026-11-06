@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Турниры — Ладья{% endblock %}
+{% block content %}
+<section class="wide">
+  <div class="pagehead">
+    <div><h2>Турниры</h2><p class="muted">Швейцарская и круговая системы. Онлайн — партии идут прямо на сайте; очно — за доской, а тренер вносит результаты.</p></div>
+    {% if is_coach %}<a class="btn" href="{{ url_for('tournaments.new') }}">＋ Новый турнир</a>{% endif %}
+  </div>
+  {% if rows %}
+  <div class="list tlist">
+    {% for t in rows %}
+    <a class="lrow" href="{{ url_for('tournaments.view', tid=t.id) }}">
+      <span class="lic">{{ '🔴' if t.status == 'running' else '📝' if t.status == 'registration' else '🏁' }}</span>
+      <span class="grow"><b>{{ t.name }}</b><br><small class="muted">{{ SYSTEMS[t.system] }} · {{ t.rounds }} тур. · {{ tc_text(t.tc, t.inc) }} · {{ 'онлайн' if t.mode == 'online' else 'очно' }}{% if t.club %} · {{ t.club }}{% else %} · открытый{% endif %}{% if t.starts %} · {{ t.starts|dt }}{% endif %}</small></span>
+      <span class="tstat s-{{ t.status }}">{{ STATUS[t.status] }}{% if t.status == 'running' %} · тур {{ t.current_round }}{% endif %}</span>
+      <small class="muted hide-sm">👥 {{ t.n }}</small>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="panel empty-state center">
+    <p>Турниров пока нет.</p>
+    {% if is_coach %}<a class="btn" href="{{ url_for('tournaments.new') }}">Создать первый турнир</a>{% else %}<p class="muted">Турниры создают тренеры клуба.</p>{% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

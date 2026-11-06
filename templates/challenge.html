@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Вызов на партию — Ладья{% endblock %}
+{% block content %}
+<section class="panel narrow center-col" id="chpage" data-id="{{ ch.id }}" data-mine="{{ 1 if mine else 0 }}" data-status="{{ 'expired' if expired else ch.status }}" data-game="{{ ch.game_id or '' }}">
+  <div class="bigicon">⚔</div>
+  <h2>Вызов на партию</h2>
+  <p class="lead"><b>{{ ch.from_name }}</b> {{ 'приглашает сыграть' }} · <b>{{ label }}</b> ({{ pool }}){{ ' · рейтинговая' if ch.rated else ' · без рейтинга' }}</p>
+  <p class="muted">Цвет создателя: {{ {'white': 'белые', 'black': 'чёрные', 'random': 'случайно'}[ch.color] }}</p>
+
+  {% if expired or ch.status in ('cancelled', 'declined') %}
+    <p class="notice">Этот вызов {{ 'истёк' if expired else 'отменён' if ch.status == 'cancelled' else 'отклонён' }}.</p>
+    <a class="btn" href="{{ url_for('online.lobby') }}">В лобби</a>
+  {% elif ch.status == 'accepted' %}
+    <p class="notice">Вызов принят.</p>
+    <a class="btn" href="{{ url_for('online.game_page', gid=ch.game_id) }}">Открыть партию</a>
+  {% elif mine %}
+    <p>Отправь эту ссылку сопернику (или он увидит вызов в уведомлениях, если ты указал ник):</p>
+    <div class="copyrow"><input id="chlink" readonly value="{{ link }}"><button id="copy" class="btn" type="button">📋 Копировать</button></div>
+    <div class="searching"><div class="spinner"></div><div><b>Ждём соперника…</b><span class="muted">Партия откроется сама, как только вызов примут</span></div></div>
+    <button id="chcancel" class="btn ghost" type="button">Отменить вызов</button>
+  {% elif not me %}
+    <p>Чтобы принять вызов, войди в аккаунт или зайди как гость.</p>
+    <form method="post" action="{{ url_for('accounts.guest') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="next" value="{{ request.path }}"><button class="btn big">👋 Играть как гость</button></form>
+    <a class="btn ghost" href="{{ url_for('accounts.login', next=request.path) }}">Войти</a>
+  {% elif ch.to_uid and (not user or user.id != ch.to_uid) %}
+    <p class="notice">Этот вызов адресован другому игроку.</p>
+  {% else %}
+    <div class="row"><button id="chaccept" class="btn big" type="button">✔ Принять и играть</button><button id="chdecline" class="btn ghost" type="button">Отклонить</button></div>
+  {% endif %}
+  <p id="chmsg" class="muted"></p>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/challenge.js') }}"></script>{% endblock %}

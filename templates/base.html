@@ -9,53 +9,68 @@
 <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body data-auth="{{ 1 if user else 0 }}">
+<body data-auth="{{ 1 if user else 0 }}"{% block bodyattr %}{% endblock %}>
 <svg class="sprite" aria-hidden="true">
   <symbol id="i-rook" viewBox="0 0 24 24"><path d="M5 3h3v2.5h2.5V3h3v2.5H16V3h3v5l-2.5 2v6.5L18 18v1H6v-1l1.5-1.5V10L5 8z"/><rect x="4" y="19.6" width="16" height="2.4" rx="1"/></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="5.8" r="3.3"/><path d="M8.6 10.6h6.8l-1.1 2.3c1.7 1.4 2.7 3.5 2.8 6H6.9c.1-2.5 1.1-4.6 2.8-6z"/><rect x="5" y="19.6" width="14" height="2.8" rx="1.2"/></symbol>
   <symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M9.5 4.5a2.5 2.5 0 0 1 5 0V6H18a1 1 0 0 1 1 1v3.5h-1.5a2.5 2.5 0 0 0 0 5H19V19a1 1 0 0 1-1 1h-3.5v-1.5a2.5 2.5 0 0 0-5 0V20H6a1 1 0 0 1-1-1v-3.5h1.5a2.5 2.5 0 0 0 0-5H5V7a1 1 0 0 1 1-1h3.5z"/></symbol>
   <symbol id="i-cup" viewBox="0 0 24 24"><path d="M6 3h12v2h3v3a4.5 4.5 0 0 1-4.3 4.5A6 6 0 0 1 13 15.9V18h3v3H8v-3h3v-2.1a6 6 0 0 1-3.7-3.4A4.5 4.5 0 0 1 3 8V5h3zm0 4H5v1a2.5 2.5 0 0 0 1.4 2.2A6 6 0 0 1 6 9zm12 0v2c0 .4 0 .8-.1 1.2A2.5 2.5 0 0 0 19 8V7z"/></symbol>
   <symbol id="i-info" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2.5a9.5 9.5 0 1 1 0 19 9.5 9.5 0 0 1 0-19zM10.8 10h2.4v7.5h-2.4zm1.2-4.2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/></symbol>
-  <symbol id="i-book"viewBox="0 0 24 24"><path d="M3 5.2C5.6 4 8.8 4 11 5.6v14.2c-2.2-1.5-5.4-1.5-8-.3zM21 5.2C18.4 4 15.2 4 13 5.6v14.2c2.2-1.5 5.4-1.5 8-.3z"/></symbol>
-  <symbol id="i-user"viewBox="0 0 24 24"><circle cx="12" cy="7.8" r="4.3"/><path d="M3.6 21.2c.3-4.6 3.9-7.5 8.4-7.5s8.1 2.9 8.4 7.5z"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M3 5.2C5.6 4 8.8 4 11 5.6v14.2c-2.2-1.5-5.4-1.5-8-.3zM21 5.2C18.4 4 15.2 4 13 5.6v14.2c2.2-1.5 5.4-1.5 8-.3z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="7.8" r="4.3"/><path d="M3.6 21.2c.3-4.6 3.9-7.5 8.4-7.5s8.1 2.9 8.4 7.5z"/></symbol>
   <symbol id="i-key" viewBox="0 0 24 24"><path d="M7.5 6.5a5.5 5.5 0 1 0 5.2 7.3H15v2.7h2.6v-2.7h1.2v2.2h2.6v-4.8h-8.7A5.5 5.5 0 0 0 7.5 6.5zm0 3.3a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4z"/></symbol>
   <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.5l2.5 6.6 6.9.6-5.3 4.5 1.7 6.8L12 17.3 6.2 21l1.7-6.8L2.6 9.7l6.9-.6z"/></symbol>
   <symbol id="i-palette" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2.8a9.2 9.2 0 0 0 0 18.4c1.3 0 2.1-.8 2.1-1.9 0-.5-.2-.9-.5-1.2-.3-.4-.5-.8-.5-1.3 0-1 .8-1.9 1.9-1.9h2.2a4.1 4.1 0 0 0 4-4.1c0-4.4-4.1-8-9.2-8zM6.9 12.6a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2zm3-4a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2zm5 0a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2z"/></symbol>
   <symbol id="i-sound" viewBox="0 0 24 24"><path d="M3 9h4l5-4.2v14.4L7 15H3z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.3 5.8a9 9 0 0 1 0 12.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
   <symbol id="i-mute" viewBox="0 0 24 24"><path d="M3 9h4l5-4.2v14.4L7 15H3z"/><path d="M15.5 9.5l5 5m0-5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M12 2.5a6.5 6.5 0 0 0-6.5 6.5v4.2L3.6 16.4c-.4.7.1 1.6.9 1.6h15c.8 0 1.3-.9.9-1.6l-1.9-3.2V9A6.5 6.5 0 0 0 12 2.5zM9.2 19.5a2.9 2.9 0 0 0 5.6 0z"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="8.5" cy="7.5" r="3.6"/><circle cx="16.8" cy="8.6" r="2.9"/><path d="M1.8 20c.3-4.2 3.1-6.7 6.7-6.7s6.4 2.5 6.7 6.7zM15.6 13.6c3.6-.4 6.3 1.8 6.6 5.6h-5.4c-.1-2.2-.5-4-1.2-5.6z"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><rect x="3" y="12" width="4.5" height="9" rx="1.2"/><rect x="9.75" y="7" width="4.5" height="14" rx="1.2"/><rect x="16.5" y="3" width="4.5" height="18" rx="1.2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2.2l8 3v6.3c0 5-3.4 9-8 10.3-4.6-1.3-8-5.3-8-10.3V5.2zm-1.2 13.4l6-6-1.6-1.6-4.4 4.4-2.2-2.2-1.6 1.6z"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="2.6" rx="1.3"/><rect x="3" y="10.7" width="18" height="2.6" rx="1.3"/><rect x="3" y="16.4" width="18" height="2.6" rx="1.3"/></symbol>
   <symbol id="i-exit" viewBox="0 0 24 24"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3h7A1.5 1.5 0 0 1 14 4.5V8h-2V5H6v14h6v-3h2v3.5a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 4 19.5z"/><path d="M10 12h10m-3.5-3.5L20 12l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </svg>
-{% set ep = request.endpoint %}
+{% set ep = request.endpoint or '' %}
 <div class="layout">
-<aside class="rail">
-  <a class="brand" href="{{ url_for('index') }}" title="Ладья — на главную"><span class="mark"><svg><use href="#i-rook"/></svg></span><b>Ладья</b></a>
-  <nav>
+<aside class="rail" id="rail">
+  <a class="brand" href="{{ url_for('pages.index') }}" title="Ладья — на главную"><span class="mark"><svg><use href="#i-rook"/></svg></span><b>Ладья</b></a>
+  <nav aria-label="Главное меню">
     <div class="has-fly">
-      <a href="{{ url_for('play') }}" class="{{ 'on' if ep in ('play', 'online_page') }}"><svg><use href="#i-play"/></svg><span>Играть</span></a>
+      <a href="{{ url_for('pages.play') }}" class="{{ 'on' if ep in ('pages.play', 'online.lobby', 'online.game_page', 'pages.analysis', 'online.challenge_page') }}"><svg><use href="#i-play"/></svg><span>Играть</span></a>
       <div class="fly">
-        <a href="{{ url_for('online_page') }}"><em>🌐</em><span><b>Онлайн</b><small>Живой соперник с сайта</small></span></a>
-        <a href="{{ url_for('play', mode='bot') }}"><em>🤖</em><span><b>С ботом</b><small>5 соперников, 200–2000 Elo</small></span></a>
-        <a href="{{ url_for('play', mode='coach') }}"><em>🎓</em><span><b>С тренером</b><small>Альберт оценивает твои ходы</small></span></a>
-        <a href="{{ url_for('play', mode='local') }}"><em>👥</em><span><b>Оффлайн</b><small>Вдвоём на одном устройстве</small></span></a>
+        <a href="{{ url_for('online.lobby') }}"><em>🌐</em><span><b>Онлайн</b><small>Живой соперник или вызов друга</small></span></a>
+        <a href="{{ url_for('pages.play', mode='bot') }}"><em>🤖</em><span><b>С ботом</b><small>5 соперников, 200–2000 Elo</small></span></a>
+        <a href="{{ url_for('pages.play', mode='coach') }}"><em>🎓</em><span><b>С тренером</b><small>Альберт оценивает твои ходы</small></span></a>
+        <a href="{{ url_for('pages.play', mode='local') }}"><em>👥</em><span><b>Оффлайн</b><small>Вдвоём на одном устройстве</small></span></a>
+        <a href="{{ url_for('pages.analysis') }}"><em>🔍</em><span><b>Доска анализа</b><small>Расстановка, движок, PGN</small></span></a>
       </div>
     </div>
-    <a href="{{ url_for('puzzles') }}" class="{{ 'on' if ep == 'puzzles' }}"><svg><use href="#i-puzzle"/></svg><span>Задачи</span></a>
-    <a href="{{ url_for('knowledge') }}" class="{{ 'on' if ep == 'knowledge' }}"><svg><use href="#i-book"/></svg><span>Познания</span></a>
-    <a href="{{ url_for('leaderboard') }}" class="{{ 'on' if ep == 'leaderboard' }}"><svg><use href="#i-cup"/></svg><span>Рейтинг</span></a>
+    <a href="{{ url_for('pages.puzzles') }}" class="{{ 'on' if ep == 'pages.puzzles' }}"><svg><use href="#i-puzzle"/></svg><span>Задачи</span></a>
+    <a href="{{ url_for('tournaments.index') }}" class="{{ 'on' if ep.startswith('tournaments.') }}"><svg><use href="#i-cup"/></svg><span>Турниры</span></a>
+    <a href="{{ url_for('clubs.index') }}" class="more {{ 'on' if ep.startswith('clubs.') }}"><svg><use href="#i-users"/></svg><span>Клубы</span></a>
+    <a href="{{ url_for('pages.knowledge') }}" class="more {{ 'on' if ep == 'pages.knowledge' }}"><svg><use href="#i-book"/></svg><span>Познания</span></a>
+    <a href="{{ url_for('pages.leaderboard') }}" class="{{ 'on' if ep == 'pages.leaderboard' }}"><svg><use href="#i-chart"/></svg><span>Рейтинг</span></a>
     {% if user %}
-      <a href="{{ url_for('profile') }}" class="{{ 'on' if ep == 'profile' }}" title="{{ user.nick }}"><img class="rava" src="{{ avatar }}" alt=""><span>Профиль</span></a>
+      <a href="{{ url_for('accounts.profile') }}" class="{{ 'on' if ep in ('accounts.profile', 'accounts.settings') }}" title="{{ user.nick }}"><img class="rava" src="{{ avatar }}" alt=""><span>Профиль</span></a>
     {% else %}
-      <a href="{{ url_for('login') }}" class="{{ 'on' if ep == 'login' }}"><svg><use href="#i-key"/></svg><span>Вход</span></a>
-      <a href="{{ url_for('register') }}" class="{{ 'on' if ep == 'register' }}"><svg><use href="#i-star"/></svg><span>Регистрация</span></a>
+      <a href="{{ url_for('accounts.login') }}" class="{{ 'on' if ep == 'accounts.login' }}"><svg><use href="#i-key"/></svg><span>Вход</span></a>
+      <a href="{{ url_for('accounts.register') }}" class="more {{ 'on' if ep == 'accounts.register' }}"><svg><use href="#i-star"/></svg><span>Регистрация</span></a>
     {% endif %}
   </nav>
   <div class="rail-bottom">
-    <button id="design" type="button"><svg><use href="#i-palette"/></svg><span>Дизайн</span></button>
-    <button id="sound" type="button"><svg><use href="#i-sound"/></svg><span>Звук</span></button>
-    <a href="{{ url_for('about') }}" class="{{ 'on' if ep == 'about' }}"><svg><use href="#i-info"/></svg><span>О сайте</span></a>
     {% if user %}
-    <form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button><svg><use href="#i-exit"/></svg><span>Выйти</span></button></form>
+    <a href="{{ url_for('notify.page') }}" id="bell" class="{{ 'on' if ep == 'notify.page' }}" title="Уведомления"><svg><use href="#i-bell"/></svg><span>Новости</span><i id="bellcount" class="count{{ '' if unread else ' hidden' }}">{{ unread }}</i></a>
     {% endif %}
+    {% if is_admin %}
+    <a href="{{ url_for('admin.index') }}" class="more {{ 'on' if ep.startswith('admin.') }}"><svg><use href="#i-shield"/></svg><span>Админ</span></a>
+    {% endif %}
+    <button id="design" type="button" class="more"><svg><use href="#i-palette"/></svg><span>Дизайн</span></button>
+    <button id="sound" type="button" class="more"><svg><use href="#i-sound"/></svg><span>Звук</span></button>
+    <a href="{{ url_for('pages.about') }}" class="more {{ 'on' if ep == 'pages.about' }}"><svg><use href="#i-info"/></svg><span>О сайте</span></a>
+    {% if user %}
+    <form method="post" action="{{ url_for('accounts.logout') }}" class="more"><input type="hidden" name="csrf" value="{{ csrf }}"><button><svg><use href="#i-exit"/></svg><span>Выйти</span></button></form>
+    {% endif %}
+    <button id="morebtn" type="button" class="morebtn" aria-expanded="false" aria-controls="rail"><svg><use href="#i-more"/></svg><span>Ещё</span></button>
   </div>
 </aside>
 <main>

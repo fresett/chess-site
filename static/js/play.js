@@ -591,7 +591,7 @@ function finish(s, loser) {
     // рейтинг: сервер считает изменение (+7…+11 за победу, −7…−12 за поражение, не ниже 100)
     const mr = $('#mrating'); mr.classList.add('hidden');
     if (auth) {
-      fetch('/api/game-result', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }, body: JSON.stringify({ bot: opp().elo, mode, result: res, moves: hist.join(' ') }) })
+      fetch('/api/game-result', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }, body: JSON.stringify({ bot: opp().elo, mode, result: res, moves: hist.join(' '), color: user }) })
         .then(r => r.json()).then(d => {
           if (d.rating == null) return;
           myRating = d.rating; labels();

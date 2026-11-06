@@ -7,6 +7,48 @@ function setAva(url) {
   $('#avaimg').src = url;
   const r = document.querySelector('.rava'); if (r) r.src = url;
 }
+
+/* ---------- график рейтинга (SVG без библиотек) ---------- */
+const POOLS = { bullet: 'Пуля', blitz: 'Блиц', rapid: 'Рапид', classical: 'Классика', puzzle: 'Задачи' };
+let hist = {};
+try { hist = JSON.parse(($('#histdata') || {}).textContent || '{}'); } catch (e) { hist = {}; }
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, text) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; }
+function chart(pool) {
+  const svg = $('#chart'); if (!svg) return;
+  svg.textContent = '';
+  document.querySelectorAll('.pool').forEach(b => b.classList.toggle('on', b.dataset.pool === pool));
+  const pts = (hist[pool] || []).slice(-200);
+  // ширина в «пикселях экрана», чтобы подписи не становились крошечными на телефоне
+  const W = Math.max(280, Math.round(svg.getBoundingClientRect().width) || 600), H = 190, L = 44, R = 10, T = 12, B = 26;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  if (pts.length < 2) {
+    svg.appendChild(el('text', { x: W / 2, y: H / 2, 'text-anchor': 'middle' }, pts.length ? 'Сыграй ещё хотя бы одну партию — появится график' : `В разделе «${POOLS[pool]}» пока нет партий`));
+    $('#charthint').textContent = ''; return;
+  }
+  const vals = pts.map(p => p[1]); let lo = Math.min(...vals), hi = Math.max(...vals);
+  if (hi - lo < 40) { lo -= 20; hi += 20; }
+  const x = i => L + (W - L - R) * i / (pts.length - 1), y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
+  for (let k = 0; k <= 3; k++) {
+    const v = Math.round(lo + (hi - lo) * k / 3), yy = y(v);
+    svg.appendChild(el('line', { x1: L, x2: W - R, y1: yy, y2: yy, class: 'grid' }));
+    svg.appendChild(el('text', { x: L - 6, y: yy + 4, 'text-anchor': 'end' }, v));
+  }
+  const fmt = t => new Date(t * 1000).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+  svg.appendChild(el('text', { x: L, y: H - 6 }, fmt(pts[0][0])));
+  svg.appendChild(el('text', { x: W - R, y: H - 6, 'text-anchor': 'end' }, fmt(pts[pts.length - 1][0])));
+  svg.appendChild(el('polyline', { points: pts.map((p, i) => `${x(i).toFixed(1)},${y(p[1]).toFixed(1)}`).join(' '), class: 'ln' }));
+  const last = pts.length - 1; svg.appendChild(el('circle', { cx: x(last), cy: y(pts[last][1]), r: 4, class: 'pt' }));
+  $('#charthint').textContent = `${POOLS[pool]}: от ${Math.min(...vals)} до ${Math.max(...vals)}, сейчас ${vals[last]} (${pts.length} изм.)`;
+}
+const poolsBox = $('#pools');
+if (poolsBox) {
+  poolsBox.addEventListener('click', e => { const b = e.target.closest('.pool'); if (b) chart(b.dataset.pool); });
+  const best = Object.keys(POOLS).sort((a, b) => (hist[b] || []).length - (hist[a] || []).length)[0];
+  chart(best || 'blitz');
+}
+
+if (!$('#avabtn')) return;    // чужой профиль — дальше только смена своей аватарки
 $('#avabtn').onclick = () => $('#avapick').classList.toggle('hidden');
 
 // готовые аватарки

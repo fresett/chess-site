@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Клубы — Ладья{% endblock %}
+{% block content %}
+<section class="wide">
+  <div class="pagehead">
+    <div><h2>Клубы</h2><p class="muted">Свой рейтинг внутри клуба, участники и турниры. Вступить можно по заявке или по ссылке-приглашению от тренера.</p></div>
+    {% if is_coach %}<a class="btn" href="{{ url_for('clubs.new') }}">＋ Создать клуб</a>{% endif %}
+  </div>
+  {% if clubs %}
+  <div class="cardgrid">
+    {% for c in clubs %}
+    <a class="card club" href="{{ url_for('clubs.view', cid=c.id) }}">
+      <h3>{{ c.name }}{% if c.id in mine %} <span class="tag">ты в клубе</span>{% endif %}</h3>
+      <p class="muted clamp">{{ c.description or 'Без описания' }}</p>
+      <small class="muted">👥 {{ c.n }} · тренер {{ c.owner or '—' }} · вступление {{ policies[c.join_policy].split(' ')[0] }}</small>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="panel empty-state center">
+    <p>Клубов пока нет.</p>
+    {% if is_coach %}<a class="btn" href="{{ url_for('clubs.new') }}">Создать первый клуб</a>{% else %}<p class="muted">Клубы создают тренеры. Попроси своего тренера прислать ссылку-приглашение.</p>{% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
