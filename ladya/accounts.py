@@ -12,7 +12,8 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from . import AVATAR_MAX, AVATAR_PRESETS, avatar_url
 from . import ratings as rt
 from .db import db, tx
-from .security import (client_ip, limited, login_required, new_csrf, password_problem, safe_next, PW_MIN, PW_MAX)
+from .security import (add_fail, clear_fails, client_ip, limited, lock_left, login_required, new_csrf,
+                       password_problem, safe_next, PW_MIN, PW_MAX)
 
 bp = Blueprint("accounts", __name__)
 NICK_RE = re.compile(r"^[A-Za-z0-9_А-Яа-яЁё]{3,20}$")
@@ -102,8 +103,9 @@ def login():
         d = db()
         u = find_user(d, nick) if nick else None
         now = time.time()
-        if u and u["locked_until"] > now:
-            mins = int((u["locked_until"] - now) // 60) + 1
+        left = max(u["locked_until"] - now, lock_left(u["id"], client_ip())) if u else 0
+        if left > 0:
+            mins = int(left // 60) + 1
             check_password_hash(DUMMY, pw)
             log_login(d, nick, u["id"], False, "locked")
             flash(f"Слишком много неудачных попыток. Вход в этот аккаунт закрыт ещё на {mins} мин.")
@@ -116,19 +118,18 @@ def login():
         if u and ok:
             d.execute("UPDATE users SET failed_logins=0, locked_until=0, last_login=CURRENT_TIMESTAMP WHERE id=?",
                       (u["id"],))
+            clear_fails(u["id"], client_ip())
             log_login(d, nick, u["id"], True)
             start_session(u)
             if u["must_change_pw"]:
                 return redirect(url_for("accounts.force_password"))
             return redirect(safe_next(request.args.get("next") or request.form.get("next"), url_for("pages.index")))
         if u:
-            fails = u["failed_logins"] + 1
-            if fails >= cfg["LOCK_AFTER_FAILS"]:
-                d.execute("UPDATE users SET failed_logins=0, locked_until=? WHERE id=?",
-                          (now + cfg["LOCK_SECONDS"], u["id"]))
+            # счётчик в базе — только для админки; закрываем вход лишь для того адреса, с которого подбирают
+            d.execute("UPDATE users SET failed_logins=failed_logins+1 WHERE id=?", (u["id"],))
+            if add_fail(u["id"], client_ip(), cfg["LOCK_AFTER_FAILS"], cfg["LOCK_SECONDS"]):
                 log_login(d, nick, u["id"], False, "lock")
             else:
-                d.execute("UPDATE users SET failed_logins=? WHERE id=?", (fails, u["id"]))
                 log_login(d, nick, u["id"], False)
         else:
             log_login(d, nick, None, False, "no-user")

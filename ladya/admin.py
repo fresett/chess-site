@@ -105,6 +105,8 @@ def user_action(uid, action):
         flash(f"{u['nick']} разблокирован(а).", "ok")
     elif action == "unlock":
         d.execute("UPDATE users SET failed_logins=0, locked_until=0 WHERE id=?", (uid,))
+        from .security import clear_fails
+        clear_fails(uid)
         flash("Временная блокировка входа снята.", "ok")
     elif action == "reset":
         pw = temp_password()

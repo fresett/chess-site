@@ -471,6 +471,8 @@ def challenge_action(cid, action):
         if my_active_game(p):
             return jsonify(error="Сначала доиграй текущую партию"), 409
         creator = {"pid": ch["from_pid"], "name": ch["from_name"], "uid": ch["from_uid"]}
+        if my_active_game(creator):
+            return jsonify(error="Соперник сейчас играет другую партию — попробуй чуть позже"), 409
         if ch["color"] == "white":
             w, b = creator, p
         elif ch["color"] == "black":
@@ -598,6 +600,7 @@ def game_claim(gid):
     if err:
         return err
     action = (request.get_json(silent=True) or {}).get("action")
+    check_time(row)          # если у самого заявителя упал флажок — он проиграл по времени, забирать нечего
     with tx():
         row = get_row(gid)
         s = state(row, p)
@@ -652,6 +655,8 @@ def game_rematch(gid):
             # цвета меняются
             white = {"pid": row["b_pid"], "name": row["b_name"], "uid": row["b_uid"]}
             black = {"pid": row["w_pid"], "name": row["w_name"], "uid": row["w_uid"]}
+            if my_active_game(white if mine == "w" else black):
+                return jsonify(error="Соперник уже играет другую партию", state=state(row, p)), 409
             new = create_game(d, white, black, row["tc"], row["inc"], rated=row["rated"])
             d.execute("UPDATE online_games SET rematch_gid=?, rematch_offer=NULL, ver=ver+1 WHERE id=?", (new, gid))
         elif action == "decline" and offer and offer != mine:

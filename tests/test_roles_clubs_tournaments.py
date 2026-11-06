@@ -279,3 +279,37 @@ def test_must_join_club_for_club_tournament(browser, db_exec):
     s.post(f"/t/{tid}/join")
     assert db_exec("SELECT COUNT(*) FROM t_players WHERE tournament_id=?", (tid,))[0][0] == 0
     assert PW
+
+
+def test_double_pair_click_does_not_duplicate_round(app, browser, db_exec):
+    from ladya import tournaments as tm
+    coach = make(browser, db_exec, "Elena", "coach")
+    tid = create_tournament(coach, mode="online", rounds=2)
+    for n in ("Ann", "Ben", "Cat", "Dan"):
+        make(browser, db_exec, n).post(f"/t/{tid}/join")
+    coach.post(f"/t/{tid}/start")
+    with app.test_request_context():
+        stale = tm.get_t(tid)                     # второй запрос прочитал турнир до того, как первый сделал пары
+        assert tm.make_pairings(tm.get_t(tid))[0] == 1
+        assert tm.make_pairings(stale) == (None, [])
+    assert db_exec("SELECT COUNT(*) FROM t_pairings WHERE tournament_id=?", (tid,))[0][0] == 2
+    assert db_exec("SELECT COUNT(*) FROM online_games")[0][0] == 2
+
+
+def test_arbiter_result_goes_to_history_and_rating(browser, db_exec):
+    coach = make(browser, db_exec, "Elena", "coach")
+    tid = create_tournament(coach, mode="online", rounds=1)
+    pl = {n: make(browser, db_exec, n) for n in ("Ann", "Ben")}
+    for b in pl.values():
+        b.post(f"/t/{tid}/join")
+    coach.post(f"/t/{tid}/start")
+    coach.post(f"/t/{tid}/pair")
+    pid, gid, wn, bn = db_exec("SELECT p.id, g.id, g.w_name, g.b_name FROM t_pairings p "
+                               "JOIN online_games g ON g.id=p.game_id WHERE p.tournament_id=?", (tid,))[0]
+    for i, u in enumerate(["e2e4", "e7e5"]):
+        pl[wn if i % 2 == 0 else bn].api(f"/api/online/game/{gid}/move", {"uci": u, "ply": i})
+    coach.post(f"/t/{tid}/result/{pid}", {"result": "1-0"})
+    assert tuple(db_exec("SELECT status, result, reason FROM online_games WHERE id=?", (gid,))[0]) == ("over", "1-0", "arbiter")
+    assert db_exec("SELECT result FROM t_pairings WHERE id=?", (pid,))[0][0] == "1-0"
+    assert db_exec("SELECT COUNT(*) FROM games WHERE online_id=?", (gid,))[0][0] == 2
+    assert db_exec("SELECT status FROM tournaments WHERE id=?", (tid,))[0][0] == "finished"

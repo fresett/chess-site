@@ -226,3 +226,27 @@ def test_game_pages_render(browser):
     assert w.get(f"/online/game/{gid}").status_code == 200
     assert w.get("/online").status_code == 200
     assert browser().get(f"/online/game/{gid}").status_code == 200        # зритель
+
+
+def test_claim_after_own_flag_fell_loses_on_time(browser, clock):
+    gid, w, b = start_game(browser, tc="1+0")
+    play(gid, w, b, ["e2e4", "e7e5"])
+    # ход белых, соперник пропал, но и у белых упал флажок — забрать победу нельзя
+    clock.t += 70
+    st = w.api(f"/api/online/game/{gid}/claim", {"action": "win"}).get_json()
+    assert st["status"] == "over" and st["result"] == "0-1" and st["reason"] == "timeout"
+
+
+def test_challenge_not_accepted_while_creator_plays(browser):
+    a = browser()
+    a.register("Creator")
+    r = a.api("/api/online/challenge", {"tc": "3+2"}).get_json()
+    # создатель вызова ушёл играть быструю партию
+    o = browser()
+    o.register("Other")
+    a.api("/api/online/seek", {"tc": "5+0"})
+    assert o.api("/api/online/seek", {"tc": "5+0"}).get_json().get("game")
+    x = browser()
+    x.register("Taker")
+    resp = x.api(f"/api/online/challenge/{r['id']}/accept")
+    assert resp.status_code == 409

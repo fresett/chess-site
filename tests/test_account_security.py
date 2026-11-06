@@ -107,9 +107,12 @@ def test_account_lockout_after_failed_logins(app, browser, db_exec):
     r = attacker.login("Target", PW)
     assert r.status_code == 429 and "закрыт" in r.data.decode()
     assert db_exec("SELECT COUNT(*) FROM login_log WHERE ok=0")[0][0] >= n
-    # админ может снять блокировку
-    db_exec("UPDATE users SET locked_until=0 WHERE nick='Target'")
-    assert browser().login("Target", PW).status_code == 302
+    # настоящий владелец с другого адреса входит спокойно — чужак не может закрыть ему вход
+    owner = browser()
+    r = owner.post("/login", {"nick": "Target", "password": PW}, environ_base={"REMOTE_ADDR": "10.0.0.7"})
+    assert r.status_code == 302
+    # а с адреса подбора — по-прежнему закрыто
+    assert attacker.login("Target", PW).status_code == 429
 
 
 def test_login_rate_limit_per_ip(app, browser):

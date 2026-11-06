@@ -410,7 +410,8 @@ def start(tid):
 
 
 def make_pairings(t):
-    """Сделать жеребьёвку следующего тура. Возвращает номер тура."""
+    """Сделать жеребьёвку следующего тура. Возвращает (номер тура, доски без онлайн-партии)
+    или (None, []) если тур уже разыграли параллельным запросом (двойной клик)."""
     tid, rnd = t["id"], t["current_round"] + 1
     d = db()
     players = players_of(tid)
@@ -438,12 +439,17 @@ def make_pairings(t):
         rows = [(w, b, None) for w, b in pairs]
         if bye:
             rows.append((bye, None, "bye"))
+    no_game = []
     with tx():
+        # второй одновременный запрос (двойной клик) увидит уже сдвинутый тур и ничего не сделает
+        if d.execute("SELECT current_round FROM tournaments WHERE id=?", (tid,)).fetchone()[0] != t["current_round"]:
+            return None, []
         for board, (w, b, res) in enumerate(rows, 1):
             cur = d.execute("INSERT INTO t_pairings(tournament_id,round,board,white_id,black_id,result) "
                             "VALUES(?,?,?,?,?,?)", (tid, rnd, board, w, b, res))
             if t["mode"] == "online" and b is not None and res is None:
-                _start_online_game(d, t, cur.lastrowid, w, b, rnd, board)
+                if not _start_online_game(d, t, cur.lastrowid, w, b, rnd, board):
+                    no_game.append(board)
             elif b is None:
                 pl = d.execute("SELECT user_id FROM t_players WHERE id=?", (w,)).fetchone()
                 if pl and pl["user_id"]:
@@ -458,7 +464,7 @@ def make_pairings(t):
                         notify(pl["user_id"], "tournament", f"«{t['name']}»: опубликованы пары {rnd}-го тура",
                                url_for("tournaments.view", tid=tid, round=rnd), d=d)
         _after_result(d, tid, rnd)        # тур мог сразу оказаться завершённым (bye/неявки)
-    return rnd
+    return rnd, no_game
 
 
 def _start_online_game(d, t, pairing_id, w, b, rnd, board):
@@ -466,7 +472,7 @@ def _start_online_game(d, t, pairing_id, w, b, rnd, board):
     pw = d.execute("SELECT * FROM t_players WHERE id=?", (w,)).fetchone()
     pb = d.execute("SELECT * FROM t_players WHERE id=?", (b,)).fetchone()
     if not (pw["user_id"] and pb["user_id"]):
-        return
+        return False          # у кого-то нет аккаунта — партию на сайте не создать, результат вносит тренер
     white = {"pid": f"u{pw['user_id']}", "name": pw["name"], "uid": pw["user_id"]}
     black = {"pid": f"u{pb['user_id']}", "name": pb["name"], "uid": pb["user_id"]}
     gid = create_game(d, white, black, t["tc"], t["inc"], rated=True, pairing_id=pairing_id)
@@ -474,6 +480,7 @@ def _start_online_game(d, t, pairing_id, w, b, rnd, board):
     for uid, opp in ((pw["user_id"], pb["name"]), (pb["user_id"], pw["name"])):
         notify(uid, "tournament", f"«{t['name']}», тур {rnd}, доска {board}: твоя партия против {opp} началась!",
                url_for("online.game_page", gid=gid), d=d)
+    return True
 
 
 @bp.route("/t/<int:tid>/pair", methods=["POST"])
@@ -490,8 +497,13 @@ def pair(tid):
     elif len([p for p in players_of(tid) if not p["withdrawn"]]) < 2:
         flash("Недостаточно активных игроков.")
     else:
-        rnd = make_pairings(t)
+        rnd, no_game = make_pairings(t)
+        if rnd is None:
+            return redirect(url_for("tournaments.view", tid=tid))
         flash(f"✔ Жеребьёвка {rnd}-го тура готова.", "ok")
+        if no_game:
+            flash(f"Доски {', '.join(map(str, no_game))}: у одного из игроков нет аккаунта на сайте, "
+                  "поэтому партия не создана — внеси результат вручную.")
         return redirect(url_for("tournaments.view", tid=tid, round=rnd))
     return redirect(url_for("tournaments.view", tid=tid))
 
@@ -539,11 +551,14 @@ def set_result(tid, pid):
                 return redirect(url_for("tournaments.view", tid=tid, round=p["round"]))
             d.execute("UPDATE t_pairings SET result=NULL WHERE id=?", (pid,))
         elif res in RESULTS:
-            if p["game_id"]:      # тренер решил исход онлайн-партии — останавливаем её
-                d.execute("UPDATE online_games SET status='over', result=?, reason='arbiter', ver=ver+1 "
-                          "WHERE id=? AND status='active'",
-                          ({"1-0": "1-0", "0-1": "0-1", "+-": "1-0", "-+": "0-1"}.get(res, "1/2-1/2"), p["game_id"]))
+            # сначала результат пары: тогда online.finish() не перезапишет его и не позовёт _after_result второй раз
             d.execute("UPDATE t_pairings SET result=? WHERE id=?", (res, pid))
+            if p["game_id"]:      # тренер решил исход онлайн-партии — завершаем её как обычно (рейтинг, история)
+                from .online import finish as finish_game, get_row
+                g_row = get_row(p["game_id"])
+                if g_row and g_row["status"] == "active":
+                    finish_game(g_row, {"1-0": "1-0", "0-1": "0-1", "+-": "1-0", "-+": "0-1"}.get(res, "1/2-1/2"),
+                                "arbiter")
             if t["status"] == "finished":
                 pass
             else:

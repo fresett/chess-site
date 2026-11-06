@@ -62,6 +62,39 @@ def limited(bucket, key, limit, window):
     return False
 
 
+def _fails():
+    return _stores().setdefault("login-fails", {})
+
+
+def lock_left(uid, ip):
+    """Сколько секунд ещё закрыт вход в аккаунт uid с адреса ip (0 — открыт).
+    Блокировка — по паре «аккаунт + адрес»: подбирающий пароль чужак не закрывает вход настоящему владельцу."""
+    rec = _fails().get((uid, ip))
+    return max(0.0, rec["until"] - time.time()) if rec else 0.0
+
+
+def add_fail(uid, ip, limit, seconds):
+    """Учесть неверный пароль. True — если после этого вход с этого адреса закрыт."""
+    store = _fails()
+    now = time.time()
+    rec = store.get((uid, ip))
+    if not rec or (rec["until"] and rec["until"] <= now):
+        rec = store[(uid, ip)] = {"n": 0, "until": 0.0}
+    rec["n"] += 1
+    if rec["n"] >= limit:
+        rec["n"], rec["until"] = 0, now + seconds
+    if len(store) > 20000:
+        for k in [k for k, v in store.items() if v["until"] < now and not v["n"]]:
+            store.pop(k, None)
+    return rec["until"] > now
+
+
+def clear_fails(uid, ip=None):
+    store = _fails()
+    for k in [k for k in store if k[0] == uid and (ip is None or k[1] == ip)]:
+        store.pop(k, None)
+
+
 def client_ip():
     return request.remote_addr or "?"
 
