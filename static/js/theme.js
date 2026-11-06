@@ -1,12 +1,12 @@
 (function () {
   // Настройки дизайна: фигуры, доска, фон, звуки. Хранятся в localStorage браузера.
   var OPTS = {
-    pieces: ['classic', 'wood', 'flat'],
-    board: ['amber', 'ice', 'emerald'],
-    bg: ['ink', 'paper', 'graphite'],
+    pieces: ['royal', 'classic', 'wood', 'flat'],
+    board: ['felt', 'amber', 'ice', 'emerald'],
+    bg: ['night', 'ink', 'paper', 'graphite'],
     sound: ['classic', 'wood', 'chime']
   };
-  var DEF = { pieces: 'classic', board: 'amber', bg: 'graphite', sound: 'classic' };
+  var DEF = { pieces: 'royal', board: 'felt', bg: 'night', sound: 'classic' };
   var root = document.documentElement;
   var cur = {};
 
@@ -18,7 +18,8 @@
       try { var old = localStorage.getItem('theme'); if (old === 'light') s.bg = 'paper'; } catch (e) {}
     }
     if (s.bg === 'light') s.bg = 'paper';
-    if (s.v !== 2 && s.bg === 'ink') delete s.bg; // «Чернила» раньше был фоном по умолчанию — теперь по умолчанию «Графит»
+    if (s.v !== 2 && s.v !== 3 && s.bg === 'ink') delete s.bg;
+    if (s.v !== 3) { delete s.bg; delete s.board; delete s.pieces; } // редизайн «Ночной клуб»: показать новый вид всем // «Чернила» раньше был фоном по умолчанию — теперь по умолчанию «Графит»
     for (var k in DEF) cur[k] = OPTS[k].indexOf(s[k]) >= 0 ? s[k] : DEF[k];
   }
   function apply() {
@@ -33,7 +34,7 @@
   function set(k, v) {
     if (OPTS[k].indexOf(v) < 0) return;
     cur[k] = v; apply();
-    try { localStorage.setItem('design', JSON.stringify({ v: 2, pieces: cur.pieces, board: cur.board, bg: cur.bg, sound: cur.sound })); } catch (e) {}
+    try { localStorage.setItem('design', JSON.stringify({ v: 3, pieces: cur.pieces, board: cur.board, bg: cur.bg, sound: cur.sound })); } catch (e) {}
     window.dispatchEvent(new Event('designchange'));
   }
   load(); apply();
