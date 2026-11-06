@@ -731,3 +731,10 @@ body::after{inset:0;opacity:.05;background:repeating-conic-gradient(var(--text) 
 /* заголовки страниц — с золотым подчёркиванием */
 .pagehead h2{position:relative;padding-bottom:6px}
 .pagehead h2::after{content:"";position:absolute;left:0;bottom:0;width:56px;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--accent),transparent)}
+
+/* игровая страница при верхнем меню: на всю ширину, панель справа не уже 380px */
+@media(min-width:801px){main:has(.stage){max-width:none}}
+@media(min-width:1340px){
+  .stage{grid-template-columns:minmax(0,1fr) auto minmax(380px,1fr)}
+  .stage>.side{width:min(100%,460px)}
+}
