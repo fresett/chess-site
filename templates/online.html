@@ -48,7 +48,7 @@
           <select id="chtc">{% for label, base, inc, pool in tcs %}<option value="{{ label }}"{{ ' selected' if label == '10+0' }}>{{ label }} · {{ pool }}</option>{% endfor %}</select>
         </label>
         <div class="lbl">Мой цвет</div>
-        <div id="chcolor" class="seg"><button type="button" data-c="white">Белые</button><button type="button" data-c="random" class="on">Случайно</button><button type="button" data-c="black">Чёрные</button></div>
+        <div id="chcolor" class="seg colors"><button type="button" data-c="white">Белые</button><button type="button" data-c="random" class="on">Случайно</button><button type="button" data-c="black">Чёрные</button></div>
         {% if not me.guest %}<label class="check"><input type="checkbox" id="chrated" checked><span>На рейтинг</span></label>{% endif %}
         <button class="btn big">⚔ Создать вызов</button>
         <p id="chmsg" class="muted small"></p>

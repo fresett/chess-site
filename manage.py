@@ -4,7 +4,7 @@
                                                            Пароль спрашивается (не виден при вводе) или берётся
                                                            из переменной окружения ADMIN_PASSWORD.
                                                            --must-change: при первом входе попросить сменить пароль.
-    python manage.py set-role НИК admin|coach|user        — назначить роль
+    python manage.py set-role НИК owner|admin|coach|user  — назначить роль (owner — владелец, может всё)
     python manage.py users                                — список участников (ник, роль, рейтинг, партий)
     python manage.py reset-password НИК [--must-change]   — задать новый пароль (спросит его; или ADMIN_PASSWORD)
     python manage.py unlock НИК                           — снять блокировку (и временную — после неудачных входов)
@@ -30,7 +30,7 @@ sys.path.insert(0, BASE)
 from ladya import db as dbm  # noqa: E402
 from ladya.security import password_problem  # noqa: E402
 
-ROLES = ("admin", "coach", "user")
+ROLES = ("owner", "admin", "coach", "user")
 
 
 def find(c, nick):
@@ -94,7 +94,7 @@ def main(argv):
         return 0 if ok == "ok" else 1
     if cmd == "users":
         rows = c.execute("""SELECT nick, role, blocked, rating, (SELECT COUNT(*) FROM games g WHERE g.user_id=u.id) n,
-                            created FROM users u ORDER BY role='admin' DESC, role='coach' DESC, rating DESC""").fetchall()
+                            created FROM users u ORDER BY role='owner' DESC, role='admin' DESC, role='coach' DESC, rating DESC""").fetchall()
         print(f"{'Ник':22} {'Роль':6} {'Рейтинг':>8} {'Партий':>7}  В клубе с")
         for r in rows:
             print(f"{r['nick']:22} {r['role']:6} {r['rating']:>8} {r['n']:>7}  {r['created'][:10]}"
@@ -115,7 +115,8 @@ def main(argv):
                 if not pw:
                     return 1
                 set_password(c, u["id"], pw, must)
-            c.execute("UPDATE users SET role='admin', blocked=0 WHERE id=?", (u["id"],))
+            c.execute("UPDATE users SET role=CASE WHEN role='owner' THEN 'owner' ELSE 'admin' END, blocked=0 WHERE id=?",
+                      (u["id"],))
             print(f"«{u['nick']}» теперь администратор.")
             return 0
         from ladya.accounts import NICK_RE

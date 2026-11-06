@@ -239,8 +239,8 @@ def delete_account():
         flash("Пароль неверный — аккаунт не удалён.")
         return redirect(url_for("accounts.settings"))
     d = db()
-    if g.user["role"] == "admin" and d.execute(
-            "SELECT COUNT(*) FROM users WHERE role='admin'").fetchone()[0] <= 1:
+    if g.user["role"] in ("owner", "admin") and d.execute(
+            "SELECT COUNT(*) FROM users WHERE role IN ('owner','admin')").fetchone()[0] <= 1:
         flash("Ты единственный администратор — сначала назначь другого.")
         return redirect(url_for("accounts.settings"))
     with tx():

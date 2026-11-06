@@ -86,3 +86,8 @@ if (live) {
 document.querySelectorAll('.rail nav a, .rail-bottom a, .rail-bottom button').forEach(a => {
   const s = a.querySelector('span'); if (s && !a.title) a.title = s.textContent;
 });
+// верхнее меню получает тень, когда страницу прокрутили
+(function () {
+  const f = () => document.body.classList.toggle('scrolled', window.scrollY > 8);
+  window.addEventListener('scroll', f, { passive: true }); f();
+})();

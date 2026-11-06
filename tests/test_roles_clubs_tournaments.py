@@ -59,7 +59,7 @@ def test_coach_manages_only_own(browser, db_exec):
 
 
 def test_admin_user_management(browser, db_exec):
-    adm = make(browser, db_exec, "Boss", "admin")
+    adm = make(browser, db_exec, "Boss", "owner")      # роли выдаёт только владелец
     s = make(browser, db_exec, "Kid")
     uid = db_exec("SELECT id FROM users WHERE nick='Kid'")[0][0]
     assert "Kid" in adm.get("/admin/users?q=ki").data.decode()
@@ -80,10 +80,10 @@ def test_admin_user_management(browser, db_exec):
     r = k.post("/account/new-password", {"old": temp, "new": "NewSecret-77", "new2": "NewSecret-77"})
     assert r.status_code == 302
     assert k.get("/profile").status_code == 200
-    # последнего админа нельзя понизить
+    # владельца нельзя понизить через админку
     aid = db_exec("SELECT id FROM users WHERE nick='Boss'")[0][0]
     adm.post(f"/admin/users/{aid}/role", {"role": "user"})
-    assert db_exec("SELECT role FROM users WHERE id=?", (aid,))[0][0] == "admin"
+    assert db_exec("SELECT role FROM users WHERE id=?", (aid,))[0][0] == "owner"
     for page in ("/admin/", "/admin/clubs", "/admin/tournaments", "/admin/reports", "/admin/logins"):
         assert adm.get(page).status_code == 200, page
 
@@ -313,3 +313,22 @@ def test_arbiter_result_goes_to_history_and_rating(browser, db_exec):
     assert db_exec("SELECT result FROM t_pairings WHERE id=?", (pid,))[0][0] == "1-0"
     assert db_exec("SELECT COUNT(*) FROM games WHERE online_id=?", (gid,))[0][0] == 2
     assert db_exec("SELECT status FROM tournaments WHERE id=?", (tid,))[0][0] == "finished"
+
+
+def test_owner_role_assignment(browser, db_exec):
+    owner = make(browser, db_exec, "fresett", "owner")
+    admin = make(browser, db_exec, "Kirill", "admin")
+    make(browser, db_exec, "Ira")
+    ira = db_exec("SELECT id FROM users WHERE nick='Ira'")[0][0]
+    boss = db_exec("SELECT id FROM users WHERE nick='fresett'")[0][0]
+    # админ не выдаёт роли и не трогает владельца
+    admin.post(f"/admin/users/{ira}/role", {"role": "coach"})
+    assert db_exec("SELECT role FROM users WHERE id=?", (ira,))[0][0] == "user"
+    admin.post(f"/admin/users/{boss}/block")
+    assert db_exec("SELECT blocked FROM users WHERE id=?", (boss,))[0][0] == 0
+    # владелец выдаёт «преподавателя», но не может раздать «владельца»
+    owner.post(f"/admin/users/{ira}/role", {"role": "coach"})
+    assert db_exec("SELECT role FROM users WHERE id=?", (ira,))[0][0] == "coach"
+    assert owner.post(f"/admin/users/{ira}/role", {"role": "owner"}).status_code == 400
+    # владелец — тоже админ: админка открыта
+    assert owner.get("/admin/").status_code == 200

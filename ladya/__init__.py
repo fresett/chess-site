@@ -121,7 +121,7 @@ def create_app(config=None):
                                       (u["id"],)).fetchone()[0]
         return {"user": u, "csrf": session.get("csrf", ""), "avatar": avatar_url(u) if u else None,
                 "presets": sorted(AVATAR_PRESETS, key=lambda s: int(s[1:])), "is_admin": sec.is_admin(u),
-                "is_coach": sec.is_coach(u), "unread": unread, "ROLE_NAMES": sec.ROLE_NAMES,
+                "is_coach": sec.is_coach(u), "is_owner": sec.is_owner(u), "ASSIGNABLE": sec.ASSIGNABLE, "unread": unread, "ROLE_NAMES": sec.ROLE_NAMES,
                 "avatar_url": avatar_url, "now": time.time()}
 
     @app.template_filter("dt")

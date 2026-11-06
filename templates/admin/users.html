@@ -16,8 +16,10 @@
       {% if u.must_change_pw %}<span class="tag">сменит пароль при входе</span>{% endif %}
       <br><small class="muted">с {{ u.created|d }} · последний вход {{ u.last_login|dt if u.last_login else '—' }} · рейтинг {{ u.rating }}</small></span>
     <details class="menu"><summary title="Действия">⋯</summary><div>
+      {% if is_owner and u.role != 'owner' %}
       <form method="post" action="{{ url_for('admin.user_action', uid=u.id, action='role') }}" class="inlineform"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="back" value="{{ request.full_path }}">
-        <select name="role" aria-label="Роль">{% for k, v in ROLE_NAMES.items() %}<option value="{{ k }}"{{ ' selected' if u.role == k }}>{{ v }}</option>{% endfor %}</select><button>Сменить роль</button></form>
+        <select name="role" aria-label="Роль">{% for k in ASSIGNABLE %}<option value="{{ k }}"{{ ' selected' if u.role == k }}>{{ ROLE_NAMES[k] }}</option>{% endfor %}</select><button>Выдать роль</button></form>
+      {% endif %}
       <form method="post" action="{{ url_for('admin.user_action', uid=u.id, action='reset') }}" data-confirm="Сбросить пароль {{ u.nick }}? Будет показан временный пароль."><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="back" value="{{ request.full_path }}"><button>Сбросить пароль</button></form>
       {% if u.locked_until > now %}<form method="post" action="{{ url_for('admin.user_action', uid=u.id, action='unlock') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="back" value="{{ request.full_path }}"><button>Разблокировать вход</button></form>{% endif %}
       {% if u.blocked %}

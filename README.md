@@ -48,6 +48,7 @@
 python manage.py create-admin Elena                 # пароль спросит (ввод не виден)
 python manage.py create-admin Kirill --must-change  # при первом входе попросит придумать свой пароль
 ADMIN_PASSWORD='...' python manage.py create-admin Elena   # или пароль из переменной окружения
+python manage.py set-role fresett owner             # владелец сайта (красный): может всё и один выдаёт роли
 ```
 
 Если аккаунт уже есть — команда сделает его администратором.

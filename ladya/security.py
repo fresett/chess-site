@@ -106,17 +106,24 @@ def too_many(msg="Слишком много запросов, подожди м�
 
 
 # ---------------------------------------------------------------- роли
-ROLE_NAMES = {"admin": "администратор", "coach": "тренер", "user": "участник"}
+ROLE_NAMES = {"owner": "владелец", "admin": "администратор", "coach": "преподаватель", "user": "участник"}
+ASSIGNABLE = ("admin", "coach", "user")      # «владельца» выдают только командой manage.py set-role НИК owner
+ADMINS = ("owner", "admin")
 
 
 def is_admin(u=None):
     u = u if u is not None else g.get("user")
-    return bool(u) and u["role"] == "admin"
+    return bool(u) and u["role"] in ADMINS
+
+
+def is_owner(u=None):
+    u = u if u is not None else g.get("user")
+    return bool(u) and u["role"] == "owner"
 
 
 def is_coach(u=None):
     u = u if u is not None else g.get("user")
-    return bool(u) and u["role"] in ("admin", "coach")
+    return bool(u) and u["role"] in ("owner", "admin", "coach")
 
 
 def login_required(f):
@@ -137,7 +144,7 @@ def role_required(*roles):
             u = g.get("user")
             if not u:
                 return login_required(f)(*a, **k)
-            if u["role"] not in roles and u["role"] != "admin":
+            if u["role"] not in roles and u["role"] not in ADMINS:
                 if request.path.startswith("/api/"):
                     return jsonify(error="Недостаточно прав"), 403
                 abort(403)

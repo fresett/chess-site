@@ -6,7 +6,7 @@ from flask import Blueprint, abort, flash, g, redirect, render_template, request
 
 from .accounts import _set_password, delete_user
 from .db import db, tx
-from .security import ROLE_NAMES, role_required
+from .security import ASSIGNABLE, ROLE_NAMES, is_owner, role_required
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 PER = 50
@@ -70,7 +70,7 @@ def _target(uid):
 
 
 def _last_admin(u):
-    return u["role"] == "admin" and db().execute("SELECT COUNT(*) FROM users WHERE role='admin'").fetchone()[0] <= 1
+    return u["role"] in ("owner", "admin") and         db().execute("SELECT COUNT(*) FROM users WHERE role IN ('owner','admin')").fetchone()[0] <= 1
 
 
 @bp.route("/users/<int:uid>/<action>", methods=["POST"])
@@ -81,9 +81,16 @@ def user_action(uid, action):
     back = request.form.get("back") or url_for("admin.users")
     if not back.startswith("/admin"):
         back = url_for("admin.users")
+    # владельца сайта не может трогать никто, кроме самого владельца
+    if u["role"] == "owner" and not is_owner():
+        flash("Это владелец сайта — его аккаунт может менять только он сам.")
+        return redirect(back)
     if action == "role":
         role = request.form.get("role")
-        if role not in ROLE_NAMES:
+        if not is_owner():
+            flash("Выдавать роли может только владелец сайта.")
+            return redirect(back)
+        if role not in ASSIGNABLE or u["role"] == "owner":
             abort(400)
         if _last_admin(u) and role != "admin":
             flash("Нельзя снять последнего администратора.")
