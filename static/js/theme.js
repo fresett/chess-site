@@ -4,9 +4,9 @@
     pieces: ['royal', 'classic', 'wood', 'flat'],
     board: ['felt', 'amber', 'ice', 'emerald'],
     bg: ['night', 'ink', 'paper', 'graphite'],
-    sound: ['classic', 'wood', 'chime']
+    sound: ['club', 'classic', 'wood', 'chime']
   };
-  var DEF = { pieces: 'royal', board: 'felt', bg: 'night', sound: 'classic' };
+  var DEF = { pieces: 'royal', board: 'felt', bg: 'night', sound: 'club' };
   var root = document.documentElement;
   var cur = {};
 
@@ -19,7 +19,7 @@
     }
     if (s.bg === 'light') s.bg = 'paper';
     if (s.v !== 2 && s.v !== 3 && s.bg === 'ink') delete s.bg;
-    if (s.v !== 3) { delete s.bg; delete s.board; delete s.pieces; } // редизайн «Ночной клуб»: показать новый вид всем // «Чернила» раньше был фоном по умолчанию — теперь по умолчанию «Графит»
+    if (s.v !== 3) { delete s.bg; delete s.board; delete s.pieces; delete s.sound; } // редизайн «Ночной клуб»: показать новый вид всем // «Чернила» раньше был фоном по умолчанию — теперь по умолчанию «Графит»
     for (var k in DEF) cur[k] = OPTS[k].indexOf(s[k]) >= 0 ? s[k] : DEF[k];
   }
   function apply() {

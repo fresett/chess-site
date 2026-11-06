@@ -1,7 +1,7 @@
 (function (root) {
 'use strict';
 // Звуки синтезируются прямо в браузере (Web Audio), без файлов.
-// Три набора (настройка «Звуки» в окне «Дизайн»): classic — мягкие тоны, wood — стук дерева, chime — колокольчики.
+// Наборы (настройка «Звуки» в окне «Дизайн»): club — стук дерева «как на больших сайтах» (по умолчанию), classic — мягкие тоны, wood — стук дерева, chime — колокольчики.
 let ctx = null, muted = false;
 try { muted = localStorage.getItem('mute') === '1'; } catch (e) {}
 function ac() { if (!ctx) { const A = root.AudioContext || root.webkitAudioContext; if (!A) return null; ctx = new A(); } if (ctx.state === 'suspended') ctx.resume(); return ctx; }
@@ -22,7 +22,31 @@ function knock(t, vol, freq, q, len) {
 // колокольчик: основной тон + негармонические обертоны с долгим затуханием
 function bell(f, t, vol, d) { tone(f, t, d || 0.9, 'sine', vol); tone(f * 2.76, t, (d || 0.9) * 0.5, 'sine', vol * 0.35); tone(f * 5.4, t, (d || 0.9) * 0.25, 'sine', vol * 0.12); }
 
+// «Клуб»: плотный стук фигуры о деревянную доску (как на больших шахматных сайтах):
+// удар (шум через ФНЧ) + резонанс доски (полосовой фильтр) + низкий «тук» корпуса.
+function thock(t, vol, body, bright) {
+  const a = ac(); if (!a) return;
+  const s0 = a.currentTime + t, len = 0.09, n = Math.floor(a.sampleRate * len), b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 9);
+  const src = a.createBufferSource(); src.buffer = b;
+  const lp = a.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = bright || 2600;
+  const bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = body || 420; bp.Q.value = 1.6;
+  const g1 = a.createGain(), g2 = a.createGain(); g1.gain.value = vol * 0.55; g2.gain.value = vol * 1.6;
+  src.connect(lp); lp.connect(g1); g1.connect(a.destination); src.connect(bp); bp.connect(g2); g2.connect(a.destination);
+  src.start(s0);
+  const o = a.createOscillator(), g = a.createGain(); o.type = 'sine';
+  o.frequency.setValueAtTime(body ? body / 3.6 : 118, s0); o.frequency.exponentialRampToValueAtTime(70, s0 + 0.07);
+  g.gain.setValueAtTime(0.0001, s0); g.gain.exponentialRampToValueAtTime(vol * 0.5, s0 + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, s0 + 0.08);
+  o.connect(g); g.connect(a.destination); o.start(s0); o.stop(s0 + 0.1);
+}
+
 const SETS = {
+  club: {
+    move() { thock(0, 0.8, 430, 2400); },
+    capture() { thock(0, 1, 520, 4200); knock(0.012, 0.55, 2600, 2.5, 0.035); thock(0.05, 0.45, 380, 2000); },
+    castle() { thock(0, 0.75, 430, 2400); thock(0.11, 0.7, 400, 2300); },
+    check() { thock(0, 0.8, 470, 3000); tone(1046, 0.02, 0.16, 'sine', 0.09); tone(1568, 0.05, 0.12, 'sine', 0.05); },
+  },
   classic: {
     move() { tone(660, 0, 0.11, 'sine', 0.2, 520); tone(1320, 0, 0.06, 'sine', 0.05); },
     capture() { tone(520, 0, 0.14, 'sine', 0.26, 330); tone(780, 0.03, 0.1, 'triangle', 0.08); },
@@ -51,7 +75,7 @@ const COMMON = {
   ok() { tone(660, 0, 0.12, 'triangle', 0.15); tone(880, 0.1, 0.18, 'triangle', 0.15); },
   notify() { tone(880, 0, 0.12, 'sine', 0.15); tone(1175, 0.1, 0.18, 'sine', 0.13); },
 };
-const set = () => SETS[document.documentElement.dataset.sound] || SETS.classic;
+const set = () => SETS[document.documentElement.dataset.sound] || SETS.club;
 root.Sfx = {
   play(n) { if (muted) return; const f = set()[n] || COMMON[n]; if (f) try { f(); } catch (e) {} },
   san(s) { this.play(/[+#]/.test(s) ? 'check' : s.startsWith('O-O') ? 'castle' : s.includes('x') ? 'capture' : 'move'); },

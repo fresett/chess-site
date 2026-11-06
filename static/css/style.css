@@ -618,3 +618,73 @@ a.lrow:hover{background:var(--hover)}
   :root[data-theme=night] .showcase{animation:none}
   :root[data-theme=night] .card:hover{transform:none}
 }
+
+/* ======================================================================
+   Редизайн: меню сверху (вместо боковой панели) — на компьютерах
+   ====================================================================== */
+@media(min-width:801px){
+  :root{--top:66px}
+  .layout{flex-direction:column}
+  .rail{width:100%;height:var(--top);flex-direction:row;align-items:center;gap:6px;padding:0 22px;border-right:0;border-bottom:1px solid var(--line);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);background:color-mix(in srgb,var(--side) 82%,transparent)}
+  .brand{display:flex;align-items:center;gap:10px;padding:0;margin:0 14px 0 0;border:0}
+  .brand .mark{width:40px;height:40px;border-radius:12px}
+  .brand b{display:block!important;font-size:1.3rem}
+  .rail nav{display:flex;align-items:center;gap:2px}
+  .rail-bottom{display:flex;align-items:center;gap:2px;margin:0 0 0 auto}
+  .rail nav a,.rail-bottom button,.rail-bottom a{display:flex;flex-direction:row;align-items:center;gap:8px;width:auto;padding:9px 13px!important;border-radius:999px;font-size:.88rem;letter-spacing:0}
+  .rail nav a>span{position:static!important;width:auto!important;height:auto!important;clip:auto!important}
+  .rail svg,.rava{width:20px!important;height:20px!important}
+  .rail nav a:hover svg,.rail-bottom button:hover svg,.rail-bottom a:hover svg{transform:none}
+  .rail nav a.on::before{left:14px;right:14px;top:auto;bottom:-13px;width:auto;height:3px;border-radius:3px 3px 0 0}
+  /* справа — только значки, подписи остаются для экранных дикторов */
+  .rail-bottom a>span,.rail-bottom button>span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .rail-bottom a,.rail-bottom button{padding:10px!important}
+  .rail .count{top:0;right:0}
+  /* выпадающее меню «Играть» — вниз */
+  .fly{left:0;top:calc(100% + 12px);transform:translateY(-6px)}
+  .fly::before{left:0;right:0;top:-14px;bottom:auto;width:auto;height:14px}
+  main{width:100%;max-width:1320px;margin:0 auto;padding:30px 28px}
+  .boardwrap{--over:190px}.boardwrap.solo{--over:98px}
+}
+@media(min-width:801px) and (max-width:1180px){
+  .rail nav a>span{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden;clip:rect(0 0 0 0)!important}
+  .rail nav a{padding:10px!important}
+  .rail nav a.on::before{left:8px;right:8px}
+}
+
+/* ======================================================================
+   Редизайн: главная — большой экран + плитки (bento)
+   ====================================================================== */
+.hero2{position:relative;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:48px;align-items:center;padding:34px 0 30px}
+.hero2 .kicker{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;font-size:.78rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent)}
+.hero2 .kicker i{width:8px;height:8px;border-radius:50%;background:#3fbf6a;animation:live 1.6s infinite}
+.hero2 h1{font-size:clamp(44px,6.2vw,86px);line-height:1.02;margin:18px 0 18px}
+.hero2 h1 em{display:block}
+.hero2 p{color:var(--muted);font-size:1.18rem;margin:0 0 28px;max-width:30em}
+.hero2 .acts{display:flex;flex-wrap:wrap;gap:12px}
+.hero2 .acts .btn{padding:17px 34px;font-size:1.1rem}
+.hero2 .facts{display:flex;gap:28px;margin-top:34px;flex-wrap:wrap}
+.hero2 .facts b{display:block;font-family:var(--display);font-size:2rem;color:var(--text);line-height:1}
+.hero2 .facts span{color:var(--muted);font-size:.85rem;font-weight:700}
+.stage3d{position:relative;perspective:1200px;display:grid;place-items:center}
+.stage3d .showcase{max-width:460px}
+.stage3d::after{content:"";position:absolute;left:12%;right:12%;bottom:-6%;height:12%;background:radial-gradient(closest-side,rgba(0,0,0,.6),transparent);filter:blur(8px);z-index:-1}
+.bento{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:minmax(150px,auto);gap:16px;margin-bottom:30px}
+.bento .card{position:relative;overflow:hidden;align-content:end;padding:24px;min-height:150px}
+.bento .card h3{font-size:1.5rem}
+.bento .big{grid-column:span 4;grid-row:span 2;min-height:320px;background:
+  radial-gradient(600px 300px at 90% 0%,color-mix(in srgb,var(--accent) 22%,transparent),transparent 70%),var(--panel)}
+.bento .big h3{font-size:clamp(28px,3vw,40px)}
+.bento .big p{max-width:28em;font-size:1.05rem}
+.bento .big .acts{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.bento .tall{grid-column:span 2;grid-row:span 2}
+.bento .w2{grid-column:span 2}.bento .w3{grid-column:span 3}
+.bento .art{position:absolute;right:-10px;top:-10px;width:46%;max-width:240px;opacity:.95;transform:rotate(8deg);filter:drop-shadow(0 20px 18px rgba(0,0,0,.5));pointer-events:none;transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+.bento .card:hover .art{transform:rotate(2deg) translateY(-6px) scale(1.04)}
+.bento .tall .art{width:62%;right:-6px;top:6px}
+.bento .tours a{display:grid;padding:9px 12px;border-radius:12px;background:var(--panel2);color:var(--text);margin-top:6px}
+.bento .tours a:hover{background:var(--hover)}.bento .tours small{color:var(--muted)}
+.bento .lbl{position:relative}
+@media(max-width:1000px){.bento{grid-template-columns:repeat(2,minmax(0,1fr))}.bento .big,.bento .w3{grid-column:span 2}.bento .tall,.bento .w2{grid-column:span 1;grid-row:span 1}}
+@media(max-width:900px){.hero2{grid-template-columns:1fr;text-align:center}.hero2 p{margin-inline:auto}.hero2 .acts,.hero2 .facts{justify-content:center}.stage3d .showcase{max-width:320px}}
+@media(max-width:560px){.bento{grid-template-columns:1fr}.bento .big,.bento .tall,.bento .w2,.bento .w3{grid-column:span 1}}
