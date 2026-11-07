@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Rookline Pro — Ладья{% endblock %}
+{% block content %}
+<article class="panel pro-page">
+  <div class="pro-hero">
+    <span class="pro-badge">★ PRO</span>
+    <h2>Rookline Pro</h2>
+    <p class="muted">Больше задач, неоновый ник и поддержка сайта.</p>
+  </div>
+
+  {% if pro %}
+    <div class="pro-status on">
+      <b>✓ У тебя есть Pro</b>
+      <span>{% if days_left is none %}Бесплатно для тренеров и администраторов.{% else %}Осталось дней: <b>{{ days_left }}</b>. Можно продлить ещё одним кодом — дни сложатся.{% endif %}</span>
+    </div>
+  {% endif %}
+
+  <ul class="pro-list">
+    <li><em>🧩</em><span><b>Все 50 задач</b><small>Первые {{ free }} — бесплатно для всех, задачи {{ free + 1 }}–50 открываются с Pro: вилки, связки, маты в 2–3 хода, ловушки.</small></span></li>
+    <li><em>🧠</em><span><b>Разбор партии</b><small>Движок проверяет каждый твой ход: точность в процентах, неточности, ошибки и зевки — и показывает, как было лучше.</small></span></li>
+    <li><em>🎓</em><span><b>Тренер Альберт без лимита</b><small>Бесплатно — {{ coach_free }} партии с тренером в день, с Pro — сколько хочешь.</small></span></li>
+    <li><em>🆕</em><span><b>Задачи недели</b><small>Каждый понедельник — новая задача только для Pro.</small></span></li>
+    <li><em>✨</em><span><b>Неоновый ник и значок PRO</b><small>5 цветов неона. Ник и значок видны в профиле, рейтинге, клубах и онлайн-партиях.</small></span></li>
+    <li><em>🖼</em><span><b>Рамка для аватарки</b><small>Золотая, радужная или огненная — с анимацией.</small></span></li>
+    <li><em>🎉</em><span><b>Конфетти и новые звуки</b><small>Салют при победе и решённой задаче, звуки ходов «Неон» и «Аркада».</small></span></li>
+    <li><em>❤</em><span><b>Поддержка проекта</b><small>Всё остальное на сайте остаётся бесплатным.</small></span></li>
+  </ul>
+
+  <h3>Тарифы</h3>
+  <div class="plans">
+    {% for p in plans %}
+      <a class="plan{{ ' hot' if p.tag }}" href="{{ p.url }}" target="_blank" rel="noopener noreferrer">
+        {% if p.tag %}<span class="ptag">{{ p.tag }}</span>{% endif %}
+        <b>{{ p.name }}</b>
+        <span class="price">{{ p.price }} ₽</span>
+        <small class="muted">{% if p.days > 30 %}≈ {{ p.per_month }} ₽ в месяц{% else %}разовая оплата{% endif %}</small>
+        <span class="btn">Купить на FunPay</span>
+      </a>
+    {% endfor %}
+  </div>
+  <ol class="pro-steps">
+    <li>Купи код на FunPay — он придёт сразу после оплаты.</li>
+    <li>Войди в аккаунт и введи код ниже.</li>
+    <li>Pro включится сразу. Это не автопродление: когда срок кончится, просто купи новый код.</li>
+  </ol>
+
+  {% if user %}
+    <form method="post" action="{{ url_for('pro.redeem_form') }}" class="sform pro-form">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <b>Активировать код</b>
+      <label>Код<input name="code" required placeholder="RL-XXXX-XXXX-XXXX" maxlength="24" autocomplete="off" spellcheck="false"></label>
+      <button class="btn">Активировать</button>
+    </form>
+
+    <h3 id="neon">Неоновый ник</h3>
+    <form method="post" action="{{ url_for('pro.set_neon') }}" class="neon-pick">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      {% for k, name in neons.items() %}
+        <button name="neon" value="{{ k }}" class="nopt{{ ' on' if my_neon == k }}"{% if not pro %} disabled{% endif %}>
+          <span class="neon neon-{{ k }}">{{ user.nick }}</span><small>{{ name }}</small>
+        </button>
+      {% endfor %}
+      <button name="neon" value="" class="nopt{{ ' on' if not my_neon }}"{% if not pro %} disabled{% endif %}>
+        <span>{{ user.nick }}</span><small>Без неона</small>
+      </button>
+    </form>
+    {% if not pro %}<p class="muted small">Неоновый ник включается после активации Pro.</p>{% endif %}
+
+    <h3 id="frame">Рамка аватарки</h3>
+    <form method="post" action="{{ url_for('pro.set_frame') }}" class="frame-pick">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      {% for k, name in frames.items() %}
+        <button name="frame" value="{{ k }}" class="fopt{{ ' on' if my_frame == k }}"{% if not pro %} disabled{% endif %}>
+          <img class="fr fr-{{ k }}" src="{{ avatar }}" alt=""><small>{{ name }}</small>
+        </button>
+      {% endfor %}
+      <button name="frame" value="" class="fopt{{ ' on' if not my_frame }}"{% if not pro %} disabled{% endif %}>
+        <img src="{{ avatar }}" alt=""><small>Без рамки</small>
+      </button>
+    </form>
+    <p class="muted small">Звуки «Неон» и «Аркада» выбираются в окне «Дизайн» (значок палитры вверху).</p>
+  {% else %}
+    <p><a class="btn" href="{{ url_for('accounts.login') }}">Войти, чтобы ввести код</a></p>
+  {% endif %}
+
+  <details class="pro-terms">
+    <summary>Условия</summary>
+    <ul>
+      <li>Код одноразовый: после активации он привязывается к аккаунту и повторно не работает. Не показывай код другим до активации.</li>
+      <li>Срок считается с момента активации. Если Pro уже есть, дни добавляются к оставшимся.</li>
+      <li>Подписка не продлевается сама и ничего не списывает — когда срок кончится, просто купи новый код.</li>
+      <li>Когда Pro закончится, решённые задачи и рейтинг останутся, а неон, рамка и Pro-звуки выключатся.</li>
+      <li>Если код не активируется — напиши продавцу на FunPay в чат заказа, разберёмся.</li>
+    </ul>
+  </details>
+</article>
+{% endblock %}

@@ -10,7 +10,8 @@ from flask import Blueprint, Response, abort, g, jsonify, redirect, render_templ
 from . import avatar_url
 from . import ratings as rt
 from .db import db, tx
-from .puzzles import BY_ID, PUZZLES
+from .puzzles import BY_ID, PUZZLES, WEEKLY, weekly_open
+from .pro import FREE_PUZZLES, is_pro, puzzle_locked
 from .security import limited, login_required
 
 bp = Blueprint("pages", __name__)
@@ -19,7 +20,8 @@ COACH_LEVELS = {600, 1200, 1800}
 
 
 def puzzle_of_day():
-    return PUZZLES[int(time.time() // 86400) % len(PUZZLES)]
+    """Задача дня — всегда из бесплатных, чтобы её мог решить каждый."""
+    return PUZZLES[int(time.time() // 86400) % FREE_PUZZLES]
 
 
 @bp.route("/")
@@ -28,7 +30,7 @@ def index():
     upcoming = d.execute("SELECT t.id, t.name, t.status, t.mode, c.name AS club FROM tournaments t "
                          "LEFT JOIN clubs c ON c.id=t.club_id WHERE t.status IN ('registration','running') "
                          "ORDER BY t.status='running' DESC, t.id DESC LIMIT 4").fetchall()
-    return render_template("index.html", pod=puzzle_of_day(), upcoming=upcoming)
+    return render_template("index.html", pod=puzzle_of_day(), upcoming=upcoming, npuzzles=len(PUZZLES))
 
 
 @bp.route("/play")
@@ -39,7 +41,8 @@ def play():
 @bp.route("/puzzles")
 def puzzles():
     pr = rt.get(db(), g.user["id"], "puzzle") if g.user else None
-    return render_template("puzzles.html", pod=puzzle_of_day(), prating=pr and rt.display(pr))
+    return render_template("puzzles.html", pod=puzzle_of_day(), prating=pr and rt.display(pr),
+                           pro=is_pro(g.user), free=FREE_PUZZLES)
 
 
 @bp.route("/knowledge")
@@ -87,14 +90,14 @@ def leaderboard():
     d = db()
     if pool in rt.POOLS:
         rows = d.execute("""
-            SELECT u.id, u.nick, u.avatar, r.rating, r.rd, r.games FROM ratings r JOIN users u ON u.id=r.user_id
+            SELECT u.id, u.nick, u.avatar, u.neon, u.frame, u.role, u.pro_until, r.rating, r.rd, r.games FROM ratings r JOIN users u ON u.id=r.user_id
             WHERE r.pool=? AND r.games>0 AND u.blocked=0 ORDER BY r.rating DESC LIMIT 100""", (pool,)).fetchall()
         players = [{**dict(r), "ava": avatar_url(r), "rating": round(r["rating"]),
                     "prov": r["rd"] > 110} for r in rows]
     else:
         pool = "club"
         rows = d.execute("""
-            SELECT u.id, u.nick, u.avatar, u.rating,
+            SELECT u.id, u.nick, u.avatar, u.neon, u.frame, u.role, u.pro_until, u.rating,
                    (SELECT COUNT(*) FROM games WHERE user_id=u.id) AS games,
                    (SELECT COUNT(*) FROM games WHERE user_id=u.id AND result='win') AS wins,
                    (SELECT COUNT(*) FROM solved WHERE user_id=u.id) AS puzzles
@@ -111,8 +114,15 @@ def api_puzzles():
         done = {r[0] for r in db().execute("SELECT puzzle_id FROM solved WHERE user_id=?", (g.user["id"],))}
         tried = {r[0] for r in db().execute("SELECT puzzle_id FROM puzzle_attempts WHERE user_id=?", (g.user["id"],))}
     pod = puzzle_of_day()["id"]
-    return jsonify([{**p, "solved": p["id"] in done, "tried": p["id"] in tried, "pod": p["id"] == pod}
-                    for p in PUZZLES])
+    out = []
+    for p in PUZZLES + WEEKLY[:weekly_open()][::-1]:      # задачи недели — новые первыми
+        st = {"solved": p["id"] in done, "tried": p["id"] in tried, "pod": p["id"] == pod}
+        if puzzle_locked(g.user, p["id"]):      # без Pro — только название, позицию и решение не отдаём
+            out.append({k: p[k] for k in ("id", "title", "theme", "themeName", "icon", "group", "rating")}
+                       | st | {"locked": True, "weekly": bool(p.get("weekly"))})
+        else:
+            out.append({**p, **st, "locked": False})
+    return jsonify(out)
 
 
 @bp.route("/api/puzzle-attempt", methods=["POST"])
@@ -123,6 +133,10 @@ def api_puzzle_attempt():
     pid, ok = data.get("id"), bool(data.get("ok"))
     if pid not in BY_ID:
         return jsonify(error="Нет такой задачи"), 400
+    if puzzle_locked(g.user, pid):
+        return jsonify(error="Эта задача доступна с Rookline Pro"), 403
+    if BY_ID[pid].get("weekly") and BY_ID[pid] not in WEEKLY[:weekly_open()]:
+        return jsonify(error="Эта задача ещё не открылась"), 400
     if limited("puzzle", g.user["id"], 60, 60):
         return jsonify(error="Слишком часто"), 429
     out = {"ok": True}
@@ -143,7 +157,7 @@ def api_puzzle_attempt():
 @login_required
 def api_solved():   # старый адрес — для совместимости со старыми вкладками
     pid = (request.get_json(silent=True) or {}).get("id")
-    if pid not in BY_ID:
+    if pid not in BY_ID or puzzle_locked(g.user, pid):
         return jsonify(error="bad id"), 400
     db().execute("INSERT OR IGNORE INTO solved VALUES(?,?)", (g.user["id"], pid))
     return jsonify(ok=True)
@@ -192,10 +206,10 @@ def api_game():
     with tx() as d:
         cur = d.execute("SELECT rating FROM users WHERE id=?", (g.user["id"],)).fetchone()[0]
         new, delta = rt.club_rating_change(cur, data["bot"], data["result"])
-        d.execute("INSERT INTO games(user_id,bot,result,moves,mode,delta,color) VALUES(?,?,?,?,?,?,?)",
-                  (g.user["id"], data["bot"], data["result"], moves, mode, delta, color))
+        gid = d.execute("INSERT INTO games(user_id,bot,result,moves,mode,delta,color) VALUES(?,?,?,?,?,?,?)",
+                        (g.user["id"], data["bot"], data["result"], moves, mode, delta, color)).lastrowid
         d.execute("UPDATE users SET rating=? WHERE id=?", (new, g.user["id"]))
-    return jsonify(ok=True, rating=new, delta=delta)
+    return jsonify(ok=True, rating=new, delta=delta, gid=gid)
 
 
 # ---------------------------------------------------------------- просмотр партий и PGN

@@ -4,12 +4,12 @@
 <section class="panel profile">
   <div class="phead">
     {% if own %}
-    <button id="avabtn" class="bigava" type="button" title="Сменить аватарку"><img id="avaimg" src="{{ ava }}" alt=""><span>✎</span></button>
+    <button id="avabtn" class="bigava" type="button" title="Сменить аватарку"><img id="avaimg" class="{{ frame(u) }}" src="{{ ava }}" alt=""><span>✎</span></button>
     {% else %}
-    <span class="bigava"><img src="{{ ava }}" alt=""></span>
+    <span class="bigava"><img class="{{ frame(u) }}" src="{{ ava }}" alt=""></span>
     {% endif %}
     <div class="grow">
-      <h2 class="nick-{{ u.role }}">{{ u.nick }}{% if u.role != 'user' %} <span class="tag r-{{ u.role }}">{{ ROLE_NAMES[u.role] }}</span>{% endif %}</h2>
+      <h2 class="nick-{{ u.role }}"><span class="{{ neon(u) }}">{{ u.nick }}</span>{% if paid_pro(u) %} <span class="pro-mini" title="Rookline Pro">PRO</span>{% endif %}{% if u.role != 'user' %} <span class="tag r-{{ u.role }}">{{ ROLE_NAMES[u.role] }}</span>{% endif %}</h2>
       <p class="rating-big">🏆 <b>{{ u.rating }}</b> клубный рейтинг · <a href="{{ url_for('pages.leaderboard') }}">таблица</a></p>
       <p class="muted">В клубе с {{ u.created|d }}{% if clubs %} · {% for c in clubs %}<a href="{{ url_for('clubs.view', cid=c.id) }}">{{ c.name }}</a>{{ ', ' if not loop.last }}{% endfor %}{% endif %}</p>
     </div>

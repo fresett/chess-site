@@ -22,6 +22,7 @@ from flask import Blueprint, Response, abort, current_app, g, jsonify, render_te
 from . import ratings as rt
 from .db import db, tx
 from .notify import notify
+from .pro import looks_for
 from .security import limited
 
 bp = Blueprint("online", __name__)
@@ -230,13 +231,17 @@ def state(row, p, now=None):
     w, b = clocks(row, now)
     you = color_of(row, p)
     gone = {c: max(0, int(now - row[f"{c}_seen"])) for c in ("w", "b")}
+    look = looks_for(db(), row["w_uid"], row["b_uid"])
+    wl, bl = look.get(row["w_uid"], {}), look.get(row["b_uid"], {})
     out = {
         "id": row["id"], "ver": row["ver"], "tc": row["tc"], "inc": row["inc"], "pool": row["pool"],
         "tcLabel": tc_label(row["tc"], row["inc"]), "you": you, "rated": bool(row["rated"]),
         "white": {"name": row["w_name"], "rating": row["w_rating"], "guest": row["w_uid"] is None,
-                  "online": gone["w"] < GONE_AFTER},
+                  "online": gone["w"] < GONE_AFTER, "neon": wl.get("neon", ""),
+                  "pro": wl.get("pro", False)},
         "black": {"name": row["b_name"], "rating": row["b_rating"], "guest": row["b_uid"] is None,
-                  "online": gone["b"] < GONE_AFTER},
+                  "online": gone["b"] < GONE_AFTER, "neon": bl.get("neon", ""),
+                  "pro": bl.get("pro", False)},
         "moves": row["moves"].split(), "clock": {"w": w, "b": b}, "running": row["status"] == "active" and nmoves(row) >= 2,
         "status": row["status"], "result": row["result"], "reason": row["reason"],
         "draw_offer": row["draw_offer"], "delta": {"w": row["w_delta"], "b": row["b_delta"]},

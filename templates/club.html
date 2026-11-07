@@ -56,7 +56,7 @@
         {% for m in members %}
         <div class="lrow{{ ' me' if user and user.id == m.id }}">
           <span class="pos">{{ loop.index }}</span>
-          <a class="grow who" href="{{ url_for('accounts.public_profile', nick=m.nick) }}"><img src="{{ m.ava }}" alt="">{{ m.nick }}{% if m.role == 'coach' %} <span class="tag">тренер</span>{% endif %}</a>
+          <a class="grow who" href="{{ url_for('accounts.public_profile', nick=m.nick) }}"><img class="{{ m.fc }}" src="{{ m.ava }}" alt=""><span class="{{ m.nc }}">{{ m.nick }}</span>{% if m.pro %} <span class="pro-mini">PRO</span>{% endif %}{% if m.role == 'coach' %} <span class="tag">тренер</span>{% endif %}</a>
           <b class="rt">{{ m.show }}</b>
           {% if manage and m.id != club.owner_id %}
           <details class="menu"><summary title="Действия">⋯</summary><div>

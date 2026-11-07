@@ -254,6 +254,39 @@ def m7_indexes(c):
     """)
 
 
+def m8_new_puzzles(c):
+    """Новый набор из 50 задач: старые номера теперь значат другие задачи, поэтому отметки «решено»
+    и первые попытки обнуляются. Рейтинг в задачах сохраняется."""
+    _script(c, """
+    DELETE FROM solved;
+    DELETE FROM puzzle_attempts;
+    """)
+
+
+def m9_pro(c):
+    """Подписка Rookline Pro: срок у пользователя и одноразовые коды активации."""
+    _add_col(c, "users", "pro_until", "REAL NOT NULL DEFAULT 0")
+    _script(c, """
+    CREATE TABLE IF NOT EXISTS pro_codes(
+      code TEXT PRIMARY KEY, days INTEGER NOT NULL, created REAL NOT NULL,
+      used_by INTEGER REFERENCES users(id) ON DELETE SET NULL, used_at REAL, note TEXT);
+    """)
+
+
+def m10_neon(c):
+    """Неоновый цвет ника для Pro."""
+    _add_col(c, "users", "neon", "TEXT NOT NULL DEFAULT ''")
+
+
+def m11_pro_extras(c):
+    """Pro: рамка аватарки и счётчик партий с тренером (бесплатно — 3 в день)."""
+    _add_col(c, "users", "frame", "TEXT NOT NULL DEFAULT ''")
+    _script(c, """
+    CREATE TABLE IF NOT EXISTS coach_uses(
+      who TEXT NOT NULL, day TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(who, day));
+    """)
+
+
 MIGRATIONS = [
     (1, "Базовая схема", m1_baseline),
     (2, "Роли и безопасность", m2_roles_security),
@@ -262,6 +295,10 @@ MIGRATIONS = [
     (5, "Турниры (швейцарская система)", m5_tournaments),
     (6, "Уведомления и задачи", m6_notifications_puzzles),
     (7, "Индексы", m7_indexes),
+    (8, "Новый набор задач", m8_new_puzzles),
+    (9, "Подписка Pro", m9_pro),
+    (10, "Неоновый ник", m10_neon),
+    (11, "Pro: рамки и лимит тренера", m11_pro_extras),
 ]
 LATEST = MIGRATIONS[-1][0]
 

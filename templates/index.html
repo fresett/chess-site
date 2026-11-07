@@ -11,7 +11,7 @@
     </div>
     <div class="facts">
       <div><b>5</b><span>ботов 200–2000</span></div>
-      <div><b>25</b><span>задач на мат</span></div>
+      <div><b>{{ npuzzles }}</b><span>задач</span></div>
       <div><b>300</b><span>дебютов</span></div>
     </div>
   </div>
@@ -31,7 +31,7 @@
     <img class="art" data-piece="bq" src="/static/pieces/bq.svg" alt="">
     <span class="lbl">Задача дня</span>
     <h3>{{ pod.title }}</h3>
-    <p class="muted">Мат в {{ pod.mate }} {{ 'ход' if pod.mate == 1 else 'хода' }} · сложность {{ pod.rating }}</p>
+    <p class="muted">{{ pod.icon }} {{ pod.themeName }} · сложность {{ pod.rating }}</p>
   </a>
   <div class="card w3 tours">
     <span class="lbl">Турниры</span>

@@ -251,4 +251,5 @@ const qfen = stage.dataset.fen;
 if (qfen && !validate(qfen)) startFen = qfen;
 line = Array.isArray(initial) ? initial : [];
 go(VIEW ? 0 : line.length);
+window.AN = { go, board, line: () => line, start: () => startFen };
 })();

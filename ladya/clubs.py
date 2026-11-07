@@ -3,6 +3,7 @@ import secrets
 
 from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
 
+from .pro import frame_class, neon_class, paid_pro
 from . import avatar_url
 from . import ratings as rt
 from .db import db, tx
@@ -88,12 +89,15 @@ def view(cid):
     club = get_club(cid)
     d = db()
     pool = request.args.get("pool", "club")
-    members = d.execute("""SELECT u.id, u.nick, u.avatar, u.rating, m.role, m.joined,
+    members = d.execute("""SELECT u.id, u.nick, u.avatar, u.rating, u.neon, u.frame, u.role AS urole, u.pro_until, m.role, m.joined,
                              (SELECT COUNT(*) FROM games WHERE user_id=u.id) AS games
                            FROM club_members m JOIN users u ON u.id=m.user_id WHERE m.club_id=?""", (cid,)).fetchall()
     rows = []
     for m in members:
-        r = {**dict(m), "ava": avatar_url(m)}
+        r = {**dict(m), "ava": avatar_url(m),
+             "nc": neon_class({"neon": m["neon"], "role": m["urole"], "pro_until": m["pro_until"]}),
+             "fc": frame_class({"frame": m["frame"], "role": m["urole"], "pro_until": m["pro_until"]}),
+             "pro": paid_pro(m)}
         if pool in rt.GAME_POOLS or pool == "puzzle":
             gr = rt.get(d, m["id"], pool)
             r["score"], r["show"] = gr["rating"] if gr["games"] else -1, rt.display(gr) if gr["games"] else "—"

@@ -59,6 +59,19 @@ const SETS = {
     castle() { knock(0, 0.85, 1100, 4, 0.05); knock(0.13, 0.85, 950, 4, 0.05); },
     check() { knock(0, 1, 1500, 6, 0.05); knock(0.09, 0.9, 1800, 6, 0.05); tone(880, 0.09, 0.15, 'triangle', 0.06); },
   },
+  // ---- наборы Rookline Pro
+  neon: {   // синтвейв: мягкий «пиу» с плавным спадом
+    move() { tone(880, 0, 0.12, 'sawtooth', 0.05, 440); tone(1760, 0, 0.08, 'sine', 0.06, 880); },
+    capture() { tone(660, 0, 0.16, 'sawtooth', 0.07, 220); tone(1320, 0.02, 0.1, 'square', 0.03, 330); },
+    castle() { tone(523, 0, 0.1, 'sawtooth', 0.05, 392); tone(784, 0.1, 0.12, 'sawtooth', 0.05, 587); },
+    check() { tone(988, 0, 0.1, 'square', 0.05); tone(1319, 0.08, 0.16, 'sawtooth', 0.05, 1976); },
+  },
+  arcade: {  // 8 бит, как в старых приставках
+    move() { tone(523, 0, 0.05, 'square', 0.07); tone(784, 0.045, 0.05, 'square', 0.07); },
+    capture() { tone(196, 0, 0.12, 'square', 0.09, 98); tone(1047, 0.03, 0.06, 'square', 0.05); },
+    castle() { [523, 659, 784].forEach((f, i) => tone(f, i * 0.05, 0.05, 'square', 0.07)); },
+    check() { tone(1568, 0, 0.06, 'square', 0.07); tone(1568, 0.09, 0.06, 'square', 0.07); },
+  },
   chime: {
     move() { bell(1046, 0, 0.11, 0.5); },
     capture() { bell(784, 0, 0.13, 0.6); bell(1175, 0.05, 0.08, 0.5); },
@@ -75,7 +88,12 @@ const COMMON = {
   ok() { tone(660, 0, 0.12, 'triangle', 0.15); tone(880, 0.1, 0.18, 'triangle', 0.15); },
   notify() { tone(880, 0, 0.12, 'sine', 0.15); tone(1175, 0.1, 0.18, 'sine', 0.13); },
 };
-const set = () => SETS[document.documentElement.dataset.sound] || SETS.club;
+const PRO_SETS = ['neon', 'arcade'];
+const set = () => {
+  const k = document.documentElement.dataset.sound;
+  if (PRO_SETS.includes(k) && !(document.body && document.body.dataset.pro === '1')) return SETS.club;   // Pro закончился
+  return SETS[k] || SETS.club;
+};
 root.Sfx = {
   play(n) { if (muted) return; const f = set()[n] || COMMON[n]; if (f) try { f(); } catch (e) {} },
   san(s) { this.play(/[+#]/.test(s) ? 'check' : s.startsWith('O-O') ? 'castle' : s.includes('x') ? 'capture' : 'move'); },

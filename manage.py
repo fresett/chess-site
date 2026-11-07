@@ -12,6 +12,8 @@
     python manage.py migrate                              — обновить схему базы (делается и само при запуске сайта)
     python manage.py backup                               — сделать копию базы в instance/backup-ДАТА.db
     python manage.py check                                — проверить базу на целостность
+    python manage.py gen-codes 10 [--days=30]             — создать коды Rookline Pro (для продажи) и сохранить в instance/codes-ДАТА.txt
+    python manage.py codes                                — список кодов: какие проданы/активированы
 
 Пароли не передаются в командной строке (они бы остались в истории консоли).
 """
@@ -67,7 +69,7 @@ def main(argv):
     flags = {a for a in argv[1:] if a.startswith("--")}
     cmd = args[0] if args else ""
     if cmd not in ("create-admin", "set-role", "users", "reset-password", "unlock", "delete", "migrate", "backup",
-                   "check"):
+                   "check", "gen-codes", "codes"):
         print(__doc__)
         return 1
     if cmd == "backup":
@@ -92,6 +94,29 @@ def main(argv):
         ver = dbm.current_version(c)
         print(f"Целостность: {ok}; версия схемы: {ver} (последняя {dbm.LATEST})")
         return 0 if ok == "ok" else 1
+    if cmd == "gen-codes":
+        from ladya.pro import gen_codes
+        n = int(args[1]) if len(args) > 1 and args[1].isdigit() else 1
+        days = next((int(f.split("=", 1)[1]) for f in flags if f.startswith("--days=")), 30)
+        if not (1 <= n <= 500 and 1 <= days <= 3650):
+            print("Число кодов: 1–500, дней: 1–3650.")
+            return 1
+        codes = gen_codes(c, n, days)
+        path = os.path.join(os.path.dirname(DB), time.strftime("codes-%Y-%m-%d_%H-%M-%S.txt"))
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("\n".join(codes) + "\n")
+        print("\n".join(codes))
+        print(f"Создано {n} код(ов) на {days} дн. Сохранено в {path}")
+        return 0
+    if cmd == "codes":
+        rows = c.execute("""SELECT p.code, p.days, p.used_at, u.nick FROM pro_codes p
+                            LEFT JOIN users u ON u.id=p.used_by ORDER BY p.created DESC""").fetchall()
+        for r in rows:
+            st = (f"активирован: {r['nick'] or '?'} {time.strftime('%d.%m.%Y', time.localtime(r['used_at']))}"
+                  if r["used_at"] else "свободен")
+            print(f"{r['code']}  {r['days']:>4} дн.  {st}")
+        print(f"Всего: {len(rows)}, свободно: {sum(1 for r in rows if not r['used_at'])}")
+        return 0
     if cmd == "users":
         rows = c.execute("""SELECT nick, role, blocked, rating, (SELECT COUNT(*) FROM games g WHERE g.user_id=u.id) n,
                             created FROM users u ORDER BY role='owner' DESC, role='admin' DESC, role='coach' DESC, rating DESC""").fetchall()

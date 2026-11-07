@@ -1,12 +1,12 @@
 (function () {
   // Настройки дизайна: фигуры, доска, фон, звуки. Хранятся в localStorage браузера.
   var OPTS = {
-    pieces: ['royal', 'classic', 'wood', 'flat'],
+    pieces: ['classic', 'wood', 'flat'],
     board: ['felt', 'amber', 'ice', 'emerald'],
     bg: ['night', 'ink', 'paper', 'graphite'],
-    sound: ['club', 'classic', 'wood', 'chime']
+    sound: ['club', 'classic', 'wood', 'chime', 'neon', 'arcade']
   };
-  var DEF = { pieces: 'royal', board: 'felt', bg: 'night', sound: 'club' };
+  var DEF = { pieces: 'classic', board: 'felt', bg: 'night', sound: 'club' };
   var root = document.documentElement;
   var cur = {};
 
@@ -54,24 +54,7 @@
       var s = pv[i].parentNode.dataset.v;
       pv[i].innerHTML = ['wk', 'wn', 'bq', 'bp'].map(function (c) { return '<img alt="" src="' + pieceSrc(c, s) + '">'; }).join('');
     }
-    // голос Альберта: список русских голосов браузера
-    var vsel = document.getElementById('vsel'), vtest = document.getElementById('vtest'), vrow = document.getElementById('vrow');
-    function fillVoices() {
-      if (!window.Albert || !Albert.supported) { if (vrow) vrow.classList.add('hidden'); return; }
-      var list = Albert.voices(), chosen = Albert.voiceName();
-      vsel.innerHTML = '';
-      if (!list.length) { var o = document.createElement('option'); o.textContent = 'Русских голосов не найдено'; vsel.appendChild(o); vsel.disabled = true; return; }
-      vsel.disabled = false;
-      list.forEach(function (v) {
-        var o = document.createElement('option'); o.value = v.name; o.textContent = v.label; if (v.name === chosen) o.selected = true; vsel.appendChild(o);
-      });
-    }
-    if (vsel) {
-      vsel.addEventListener('change', function () { Albert.setVoice(vsel.value); Albert.sample(); });
-      vtest.addEventListener('click', function () { Albert.sample(); });
-      if (window.speechSynthesis) speechSynthesis.addEventListener('voiceschanged', fillVoices);
-    }
-    btn.addEventListener('click', function () { mark(); fillVoices(); modal.classList.remove('hidden'); });
+    btn.addEventListener('click', function () { mark(); modal.classList.remove('hidden'); });
     modal.addEventListener('click', function (e) {
       var o = e.target.closest('[data-k]');
       if (o) {

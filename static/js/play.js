@@ -455,7 +455,6 @@ function coachSay(text, k, choice) {
   $('#ctext').textContent = text;
   $('#cchoice').classList.toggle('hidden', !choice);
   box.querySelector('.cbub').animate([{ transform: 'scale(.96)', opacity: .4 }, { transform: 'none', opacity: 1 }], { duration: 220, easing: 'ease-out' });
-  if (window.Albert) Albert.say(text);
 }
 // шкала оценки позиции (с твоей стороны)
 function setEval(s) {
@@ -590,9 +589,11 @@ function finish(s, loser) {
     text = rnd((mode === 'coach' ? COACH_SAY : SAY)[res]);
     // рейтинг: сервер считает изменение (+7…+11 за победу, −7…−12 за поражение, не ниже 100)
     const mr = $('#mrating'); mr.classList.add('hidden');
+    $('#mreview').classList.add('hidden');
     if (auth) {
       fetch('/api/game-result', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }, body: JSON.stringify({ bot: opp().elo, mode, result: res, moves: hist.join(' '), color: user }) })
         .then(r => r.json()).then(d => {
+          if (d.gid) { const a = $('#mreview'); a.href = '/game/' + d.gid + '?review=1'; a.classList.remove('hidden'); }
           if (d.rating == null) return;
           myRating = d.rating; labels();
           mr.className = 'mrating ' + (d.delta > 0 ? 'up' : d.delta < 0 ? 'down' : '');
@@ -613,12 +614,23 @@ function finish(s, loser) {
     $('#mtext').textContent = text;
     $('#rematch').textContent = mode === 'local' ? 'Ещё партию' : 'Реванш';
     $('#modal').classList.remove('hidden');
+    if (res === 'win' && window.Confetti) Confetti.burst();
   }, 900);
 }
 function closeModal() { $('#modal').classList.add('hidden'); }
-$('#start').onclick = start;
+// партия с тренером: сервер считает лимит (бесплатно — 3 в день, с Pro — без ограничений)
+function begin() {
+  if (mode !== 'coach') { start(); return; }
+  fetch('/api/coach/start', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }, body: '{}' })
+    .then(r => r.json()).then(d => {
+      if (d.ok) { start(); if (d.left != null) setTimeout(() => coachSay(`Сегодня бесплатно осталось партий со мной: ${d.left}.`, null, false), 1600); return; }
+      closeModal();
+      askConfirm({ title: '🎓 Лимит на сегодня', sub: d.error || 'Лимит партий с тренером на сегодня исчерпан.', yes: '★ Узнать про Pro', danger: false }, () => { location.href = '/pro'; });
+    }).catch(() => start());
+}
+$('#start').onclick = begin;
 $('#again').onclick = $('#mnew').onclick = () => {
-  epoch++; if (window.Albert) Albert.stop();
+  epoch++;
   closeModal(); stopClock(); hideOffer(); started = false; over = false; thinking = false; waitChoice = false;
   g.load(Chess.START); board.last = null; board.flip = false; board.badge = null; board.hint = -1; board.warn = -1; hist = []; ucis = []; resetClocks();
   $('#side').classList.add('hidden'); $('#setup').classList.remove('hidden'); labels(); board.render();
@@ -628,7 +640,7 @@ $('#rematch').onclick = () => {
     pick = user === 'w' ? 'b' : 'w';
     document.querySelectorAll('#colors button').forEach(x => x.classList.toggle('on', x.dataset.c === pick));
   }
-  start();
+  begin();
 };
 $('#mview').onclick = $('#mclose').onclick = closeModal;
 $('#flip').onclick = () => { board.flip = !board.flip; labels(); board.render(); };
@@ -651,15 +663,6 @@ $('#cyes').onclick = () => { const f = onYes; closeConfirm(); if (f && started &
 $('#confirm').addEventListener('click', e => { if (e.target.id === 'confirm') closeConfirm(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeConfirm(); });
 
-/* ---------- голос Альберта ---------- */
-function voiceBtn() {
-  const b = $('#cvoice');
-  b.classList.toggle('hidden', !(window.Albert && Albert.supported));
-  const on = window.Albert && Albert.on();
-  b.textContent = on ? '🔊' : '🔇'; b.title = on ? 'Выключить голос Альберта' : 'Включить голос Альберта';
-}
-$('#cvoice').onclick = () => { Albert.toggle(); voiceBtn(); if (Albert.on()) Albert.say($('#ctext').textContent); };
-voiceBtn();
 
 const qMode = new URLSearchParams(location.search).get('mode');
 setMode(['bot', 'coach', 'local'].includes(qMode) ? qMode : 'bot');

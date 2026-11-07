@@ -57,7 +57,7 @@ $('#olist').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.back) { famFilter = ''; $('#q').value = ''; renderList(); return; }
   if (b.dataset.fam) { famFilter = b.dataset.fam; $('#q').value = ''; renderList(); $('#olist').scrollTop = 0; return; }
-  if (b.dataset.top) { const o = data.top[side][+b.dataset.top]; select({ top: +b.dataset.top, side, name: o.name, en: '', eco: '', note: o.note, uci: o.uci }); speak(o.name + '. ' + o.note); }
+  if (b.dataset.top) { const o = data.top[side][+b.dataset.top]; select({ top: +b.dataset.top, side, name: o.name, en: '', eco: '', note: o.note, uci: o.uci }); }
   if (b.dataset.all) { const o = data.all[+b.dataset.all]; select({ all: +b.dataset.all, name: o[2] || o[1], en: o[2] ? o[1] : '', eco: o[0], note: '', uci: o[3] }); }
   renderList();
 });
@@ -193,18 +193,7 @@ function done() {
   document.querySelector('.training').classList.remove('practicing');
   $('#practice').textContent = '🔁 Ещё раз';
   say('🏆 Отлично! Ты сыграл весь дебют. Альберт доволен.'); Sfx.play('win');
-  speak('Отлично! Ты сыграл весь дебют.');
 }
-/* ---------- голос Альберта ---------- */
-const speak = t => { if (window.Albert) Albert.say(t); };
-function voiceBtn() {
-  const b = $('#ovoice');
-  b.classList.toggle('hidden', !(window.Albert && Albert.supported));
-  const on = window.Albert && Albert.on();
-  b.textContent = on ? '🔊' : '🔇'; b.title = on ? 'Выключить голос Альберта' : 'Включить голос Альберта';
-}
-$('#ovoice').onclick = () => { Albert.toggle(); voiceBtn(); if (Albert.on()) speak($('#onotet').textContent); };
-voiceBtn();
 
 fetch('/static/openings.json').then(r => r.json()).then(d => {
   data = d; renderList();

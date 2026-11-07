@@ -16,12 +16,9 @@ const REASON = { checkmate: 'мат', stalemate: 'пат', material: 'недос
   noshow: 'неявка — первый ход не сделан', arbiter: 'решение судьи (тренера)' };
 const VAL = { p: 1, n: 3, b: 3, r: 5, q: 9 };
 const g = new Game();
-let st = null, you = null, ver = -1, pollT = null, clockT = null, sending = false, shownOver = false, viewPly = null, pre = null, lastSync = 0;
+let st = null, you = null, ver = -1, pollT = null, clockT = null, sending = false, shownOver = false, viewPly = null, lastSync = 0;
 const board = new Board($('#board'), g, {
   canMove: () => !!st && st.status === 'active' && !sending && viewPly === null && g.turn === you,
-  canPremove: () => !!st && st.status === 'active' && viewPly === null && !!you && g.turn !== you,
-  premoveColor: () => you,
-  onPremove: p => { pre = p; },
   onMove,
 });
 const capOf = m => (m.cap && m.flag !== 'e' ? m.cap : '');
@@ -159,13 +156,7 @@ function apply(d) {
     } else { const t = g.stack[g.stack.length - 1]; board.last = t ? [t.m.from, t.m.to] : null; board.render(); }
   }
   draw();
-  if (last && pre && d.status === 'active' && g.turn === you) tryPremove();
   if (d.status === 'over' && !shownOver) showOver(!first);
-}
-function tryPremove() {
-  const p = pre; pre = null; board.pre = null;
-  const ok = g.legal().some(m => m.from === p.from && m.to === p.to);
-  if (ok) onMove(p.from, p.to, p.promo); else board.render();
 }
 function onMove(from, to, promo) {
   const r = g.move(from, to, promo); if (!r) return;
@@ -185,7 +176,8 @@ function who(el, c) {
   const p = player(c); el.textContent = '';
   const e = document.createElement('em'); e.className = 'ava em'; e.textContent = c === 'w' ? '♔' : '♚'; el.appendChild(e);
   const dot = document.createElement('i'); dot.className = 'pres' + (p.online ? ' on' : ''); dot.title = p.online ? 'на связи' : 'не на связи'; el.appendChild(dot);
-  const n = document.createElement(p.guest ? 'span' : 'a'); n.textContent = p.name; if (!p.guest) n.href = '/u/' + encodeURIComponent(p.name); el.appendChild(n);
+  const n = document.createElement(p.guest ? 'span' : 'a'); n.textContent = p.name; if (p.neon) n.className = 'neon neon-' + p.neon; if (!p.guest) n.href = '/u/' + encodeURIComponent(p.name); el.appendChild(n);
+  if (p.pro) { const b = document.createElement('span'); b.className = 'pro-mini'; b.textContent = 'PRO'; el.appendChild(b); }
   const sm = document.createElement('small'); sm.className = 'muted';
   sm.textContent = (p.guest ? ' гость' : p.rating != null ? ` ${p.rating}` : '') + (c === you ? ' · ты' : ''); el.appendChild(sm);
 }
@@ -229,7 +221,6 @@ function draw() {
   $('#liverow').classList.toggle('hidden', !live || !player_);
   $('#overrow').classList.toggle('hidden', live || !player_);
   $('#report').classList.toggle('hidden', !player_);
-  $('#premovehint').classList.toggle('hidden', !live || !player_);
   const early = st.moves.length < 2;
   $('#resign').textContent = early && !st.tournament ? '✕ Отменить' : '🏳 Сдаться';
   $('#draw').disabled = early || !!st.draw_offer;
@@ -303,7 +294,7 @@ function renderClocks() {
 clockT = setInterval(renderClocks, 100);
 
 function showOver(animate) {
-  shownOver = true; pre = null; board.pre = null; board.sel = -1; board.targets = []; board.render();
+  shownOver = true; board.sel = -1; board.targets = []; board.render();
   const r = st.result, aborted = r === 'aborted';
   let res = 'draw', title = 'Ничья';
   if (aborted) title = 'Партия отменена';
@@ -315,6 +306,7 @@ function showOver(animate) {
   $('#status').textContent = title + (sub ? ' — ' + sub : '');
   draw();
   if (!animate) return;              // открыли уже законченную партию — без окна и звуков
+  if (res === 'win' && window.Confetti) setTimeout(() => Confetti.burst(), 500);
   const dl = you && st.delta[you], mr = $('#mrating');
   if (st.rated && dl != null) {
     mr.className = 'mrating ' + (dl > 0 ? 'up' : dl < 0 ? 'down' : ''); mr.textContent = `Рейтинг: ${dl > 0 ? '+' : ''}${dl}`;

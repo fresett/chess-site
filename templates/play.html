@@ -38,7 +38,6 @@
     <div id="coach" class="coachbox hidden">
       <img src="{{ url_for('static', filename='avatars/albert.svg') }}" alt="Тренер Альберт">
       <div class="cbub">
-        <button id="cvoice" class="vbtn" type="button">🔊</button>
         <p id="ctext">Удачи! Я буду следить за каждым твоим ходом.</p>
         <div id="cchoice" class="row hidden"><button id="ctake" class="btn">↩ Переходить</button><button id="cgo" class="btn ghost">Продолжить</button></div>
       </div>
@@ -65,6 +64,7 @@
   <div class="mbody"><div id="mav" class="avatar"></div><div id="mtext" class="bubble"></div></div>
   <div id="mrating" class="mrating hidden"></div>
   <div class="mbtns"><button id="rematch" class="btn big">Реванш</button>
+    <a id="mreview" class="btn ghost hidden" href="#">🧠 Разбор партии <span class="pro-mini">PRO</span></a>
     <div class="row"><button id="mnew" class="btn ghost">Изменить настройки</button><button id="mview" class="btn ghost">Посмотреть доску</button></div></div>
 </div></div>
 {% endblock %}

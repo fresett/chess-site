@@ -9,7 +9,7 @@
 <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body data-auth="{{ 1 if user else 0 }}"{% block bodyattr %}{% endblock %}>
+<body data-auth="{{ 1 if user else 0 }}" data-pro="{{ 1 if is_pro else 0 }}"{% block bodyattr %}{% endblock %}>
 <svg class="sprite" aria-hidden="true">
   <symbol id="i-rook" viewBox="0 0 24 24"><path d="M5 3h3v2.5h2.5V3h3v2.5H16V3h3v5l-2.5 2v6.5L18 18v1H6v-1l1.5-1.5V10L5 8z"/><rect x="4" y="19.6" width="16" height="2.4" rx="1"/></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="5.8" r="3.3"/><path d="M8.6 10.6h6.8l-1.1 2.3c1.7 1.4 2.7 3.5 2.8 6H6.9c.1-2.5 1.1-4.6 2.8-6z"/><rect x="5" y="19.6" width="14" height="2.8" rx="1.2"/></symbol>
@@ -46,12 +46,13 @@
       </div>
     </div>
     <a href="{{ url_for('pages.puzzles') }}" class="{{ 'on' if ep == 'pages.puzzles' }}"><svg><use href="#i-puzzle"/></svg><span>Задачи</span></a>
+    <a href="{{ url_for('pro.page') }}" class="more pro-link {{ 'on' if ep == 'pro.page' }}"><svg><use href="#i-star"/></svg><span>{{ 'Pro ✓' if is_pro else 'Pro' }}</span></a>
     <a href="{{ url_for('tournaments.index') }}" class="{{ 'on' if ep.startswith('tournaments.') }}"><svg><use href="#i-cup"/></svg><span>Турниры</span></a>
     <a href="{{ url_for('clubs.index') }}" class="more {{ 'on' if ep.startswith('clubs.') }}"><svg><use href="#i-users"/></svg><span>Клубы</span></a>
     <a href="{{ url_for('pages.knowledge') }}" class="more {{ 'on' if ep == 'pages.knowledge' }}"><svg><use href="#i-book"/></svg><span>Познания</span></a>
     <a href="{{ url_for('pages.leaderboard') }}" class="mob-more {{ 'on' if ep == 'pages.leaderboard' }}"><svg><use href="#i-chart"/></svg><span>Рейтинг</span></a>
     {% if user %}
-      <a href="{{ url_for('accounts.profile') }}" class="{{ 'on' if ep in ('accounts.profile', 'accounts.settings') }}" title="{{ user.nick }}"><img class="rava" src="{{ avatar }}" alt=""><span>Профиль</span></a>
+      <a href="{{ url_for('accounts.profile') }}" class="{{ 'on' if ep in ('accounts.profile', 'accounts.settings') }}" title="{{ user.nick }}"><img class="rava {{ frame(user) }}" src="{{ avatar }}" alt=""><span>Профиль</span></a>
     {% else %}
       <a href="{{ url_for('accounts.login') }}" class="{{ 'on' if ep == 'accounts.login' }}"><svg><use href="#i-key"/></svg><span>Вход</span></a>
       <a href="{{ url_for('accounts.register') }}" class="more {{ 'on' if ep == 'accounts.register' }}"><svg><use href="#i-star"/></svg><span>Регистрация</span></a>
@@ -83,7 +84,6 @@
   <h2>Дизайн</h2>
   <div class="lbl">Фигуры</div>
   <div class="dopts">
-    <button data-k="pieces" data-v="royal"><span class="pv"></span>Royal</button>
     <button data-k="pieces" data-v="classic"><span class="pv"></span>Классика</button>
     <button data-k="pieces" data-v="wood"><span class="pv"></span>Дерево</button>
     <button data-k="pieces" data-v="flat"><span class="pv"></span>Минимал</button>
@@ -108,16 +108,13 @@
     <button data-k="sound" data-v="classic"><span class="sv">♪</span>Классика</button>
     <button data-k="sound" data-v="wood"><span class="sv">🪵</span>Дерево</button>
     <button data-k="sound" data-v="chime"><span class="sv">🔔</span>Колокольчики</button>
-  </div>
-  <div id="vrow" class="vrow">
-    <div class="lbl">Голос тренера Альберта</div>
-    <div class="vpick"><select id="vsel" aria-label="Голос Альберта"></select><button id="vtest" class="btn ghost" type="button">▶ Прослушать</button></div>
-    <p class="muted vhint">★ — нейросетевые голоса, звучат живее всего. Лучший мужской голос — «Dmitry (Natural)» в браузере Edge.</p>
+    <button data-k="sound" data-v="neon"{% if not is_pro %} disabled title="Только с Rookline Pro"{% endif %}><span class="sv">🌆</span>Неон <span class="pro-mini">PRO</span></button>
+    <button data-k="sound" data-v="arcade"{% if not is_pro %} disabled title="Только с Rookline Pro"{% endif %}><span class="sv">👾</span>Аркада <span class="pro-mini">PRO</span></button>
   </div>
 </div></div>
 <script src="{{ url_for('static', filename='js/sound.js') }}"></script>
-<script src="{{ url_for('static', filename='js/voice.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/confetti.js') }}"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

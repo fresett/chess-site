@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Партия — Ладья{% endblock %}
 {% block content %}
-<div class="stage" id="astage" data-fen="" data-view="1">
+<div class="stage" id="astage" data-fen="" data-view="1" data-color="{{ row.color or 'w' }}" data-pro="{{ 1 if is_pro else 0 }}">
   <script type="application/json" id="amoves">{{ moves_json|safe }}</script>
   <div class="boardwrap">
     <div class="pl"><span class="nm" id="top"></span></div>
@@ -14,6 +14,11 @@
     <div id="status" class="status small-status"></div>
     <div id="moves" class="moves"></div>
     <div class="navrow" id="navrow"><button data-n="first" class="btn ghost" title="В начало">⏮</button><button data-n="prev" class="btn ghost" title="Назад (←)">◀</button><button data-n="next" class="btn ghost" title="Вперёд (→)">▶</button><button data-n="last" class="btn ghost" title="В конец">⏭</button></div>
+    <div id="review" class="review">
+      <button id="revgo" class="btn" type="button">🧠 Разбор партии <span class="pro-mini">PRO</span></button>
+      <div id="revprog" class="revprog hidden"><div class="bar"><i id="revbar"></i></div><small id="revtxt" class="muted"></small></div>
+      <div id="revout" class="hidden"></div>
+    </div>
     <div class="row"><button id="flip" class="btn ghost">⇅ Перевернуть</button><a class="btn ghost" download href="{{ pgn_url }}">⬇ PGN</a><a class="btn ghost" href="{{ url_for('pages.analysis', game=row.id) }}">🔍 Анализ</a></div>
   </aside>
 </div>
@@ -23,4 +28,5 @@
 <script src="{{ url_for('static', filename='js/chess.js') }}"></script>
 <script src="{{ url_for('static', filename='js/board.js') }}"></script>
 <script src="{{ url_for('static', filename='js/analysis.js') }}"></script>
+<script src="{{ url_for('static', filename='js/review.js') }}"></script>
 {% endblock %}

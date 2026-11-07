@@ -24,7 +24,7 @@
     {% for p in players %}
     <div class="lbrow{{ ' me' if user and user.id == p.id }}{{ ' top' ~ loop.index if loop.index <= 3 }}">
       <span class="pos">{{ ['🥇','🥈','🥉'][loop.index0] if loop.index <= 3 else loop.index }}</span>
-      <a class="who" href="{{ url_for('accounts.public_profile', nick=p.nick) }}"><img src="{{ p.ava }}" alt="">{{ p.nick }}{% if user and user.id == p.id %} <small>(ты)</small>{% endif %}</a>
+      <a class="who" href="{{ url_for('accounts.public_profile', nick=p.nick) }}"><img class="{{ frame(p) }}" src="{{ p.ava }}" alt=""><span class="{{ neon(p) }}">{{ p.nick }}</span>{% if paid_pro(p) %} <span class="pro-mini">PRO</span>{% endif %}{% if user and user.id == p.id %} <small>(ты)</small>{% endif %}</a>
       <span class="rt">{{ p.rating }}{{ '?' if p.prov }}</span>
       {% if pool == 'club' %}
       <span class="hide-sm">{{ p.games }}</span><span class="hide-sm">{{ p.wins }}</span><span class="hide-sm">{{ p.puzzles }}</span>

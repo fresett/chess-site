@@ -1,22 +1,60 @@
 {% extends "base.html" %}
 {% block title %}Задачи — Ладья{% endblock %}
 {% block content %}
-<div class="stage">
-  <div class="boardwrap solo"><div id="board" class="board"></div></div>
-  <aside class="panel side">
-    <h2 id="ptitle">Задачи</h2>
-    <div class="prow">{% if prating %}<span class="pill">🧩 Рейтинг в задачах: <b id="prating">{{ prating }}</b></span>{% endif %}<button id="podbtn" class="pill btnlike" type="button" data-id="{{ pod.id }}">⭐ Задача дня: №{{ pod.id }}</button></div>
-    <div id="status" class="status"></div>
-    <div id="plist" class="plist"></div>
-    <div class="row">
-      <button id="hint" class="btn ghost">💡 Подсказка</button>
-      <button id="reset" class="btn ghost">↺ Заново</button>
-      <button id="next" class="btn">Дальше →</button>
+<section id="mapview" class="pmap-wrap" data-pro="{{ 1 if pro else 0 }}" data-free="{{ free }}">
+  <div class="panel pmap-head">
+    <div>
+      <h2>Путь задач</h2>
+      <p class="muted">Решай по порядку: решил задачу — ладья переходит на следующий кружок.</p>
     </div>
-    <p class="muted small">Рейтинг в задачах меняется только за первую попытку каждой задачи.</p>
-    {% if not user %}<p class="muted">Войди, чтобы сохранять решённые задачи и получить рейтинг в задачах.</p>{% endif %}
-  </aside>
-</div>
+    <div class="pzprog">
+      <div class="bar"><i id="pbar"></i></div>
+      <div class="prow"><span id="pcount" class="muted"></span><span id="pstreak" class="pill"></span></div>
+      <div class="prow">
+        {% if prating %}<span class="pill">🧩 Рейтинг в задачах: <b id="prating">{{ prating }}</b></span>{% endif %}
+        <button id="podbtn" class="pill btnlike" type="button">⭐ Задача дня: №{{ pod.id }}</button>
+      </div>
+    </div>
+    {% if not user %}<p class="muted small">Войди, чтобы прогресс сохранялся на всех устройствах и считался рейтинг в задачах.</p>{% endif %}
+  </div>
+  <div id="pweekly" class="panel pweekly hidden">
+    <div class="pwh"><b>🆕 Задачи недели</b><span class="pro-badge">★ PRO</span></div>
+    <p class="muted small">Каждый понедельник — новая задача.</p>
+    <div id="pwlist" class="pwlist"></div>
+  </div>
+  <div id="pmap" class="pmap" aria-label="Карта задач"></div>
+</section>
+
+<section id="solveview" class="hidden">
+  <div class="stage">
+    <div class="boardwrap solo"><div id="board" class="board"></div></div>
+    <aside class="panel side pz">
+      <button id="back" class="btn ghost pzback" type="button">← К пути задач</button>
+      <div class="pzhead">
+        <div><small id="pnum" class="muted">Задачи</small><h2 id="ptitle">Загрузка…</h2></div>
+        <span id="pstars" class="stars" aria-label="Сложность"></span>
+      </div>
+      <div class="prow"><span id="ptheme" class="pill"></span><span id="pside" class="pill turn"></span></div>
+      <div id="pgoal" class="pgoal"></div>
+      <div id="status" class="status"></div>
+      <div id="presult" class="presult hidden"><b id="rtitle"></b><p id="ridea"></p><p id="rline" class="muted small"></p></div>
+      <div class="pzbtns">
+        <button id="hint" class="btn ghost" type="button">💡 Подсказка</button>
+        <button id="show" class="btn ghost" type="button">👁 Решение</button>
+        <button id="reset" class="btn ghost" type="button">↺ Заново</button>
+        <button id="next" class="btn" type="button">Дальше →</button>
+      </div>
+      <p class="muted small">Рейтинг в задачах меняется только за первую попытку. Подсказка и «Решение» считаются как ошибка.</p>
+    </aside>
+  </div>
+</section>
+
+<div id="prolock" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="pltitle"><div class="mbox pro-lock">
+  <span class="pro-badge">★ PRO</span>
+  <h3 id="pltitle">Задача <span id="plnum"></span> — с Rookline Pro</h3>
+  <p class="muted">Первые {{ free }} задач бесплатны. Дальше — маты в 3 хода, ловушки и эндшпиль.</p>
+  <div class="row"><a class="btn" href="{{ url_for('pro.page') }}">Узнать про Pro</a><button id="plclose" class="btn ghost" type="button">Позже</button></div>
+</div></div>
 {% endblock %}
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/chess.js') }}"></script>
