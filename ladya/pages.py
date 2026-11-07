@@ -150,6 +150,30 @@ def api_solved():   # старый адрес — для совместимос�
 
 
 # ---------------------------------------------------------------- партии с ботами
+def bot_game_problem(moves, result, color):
+    """Партию с ботом играет браузер, поэтому сервер переигрывает присланные ходы.
+    Победа засчитывается, только если партия правда закончилась матом боту или у бота кончилось время
+    (то есть сейчас ход бота). Ничья — только если партия длилась хоть сколько-то. Иначе — текст ошибки."""
+    if result == "loss":
+        return None                      # проигрыш подделывать незачем
+    b = chess.Board()
+    for tok in moves.split():
+        try:
+            b.push_san(tok)
+        except ValueError:
+            return "Ходы партии не сходятся"
+    bot_to_move = b.turn != (chess.WHITE if color == "w" else chess.BLACK)
+    if result == "win":
+        if b.is_checkmate() and bot_to_move:
+            return None
+        if not b.is_game_over() and bot_to_move and len(b.move_stack) >= 10:
+            return None                  # у бота вышло время
+        return "Победа не подтверждается ходами партии"
+    if b.is_game_over(claim_draw=True) or len(b.move_stack) >= 20:
+        return None
+    return "Слишком короткая партия для ничьей"
+
+
 @bp.route("/api/game-result", methods=["POST"])
 @login_required
 def api_game():
@@ -162,6 +186,9 @@ def api_game():
         return jsonify(error="Слишком часто"), 429
     moves = str(data.get("moves", ""))[:4000]
     color = data.get("color") if data.get("color") in ("w", "b") else None
+    problem = bot_game_problem(moves, data["result"], color or "w")
+    if problem:
+        return jsonify(error=problem), 400
     with tx() as d:
         cur = d.execute("SELECT rating FROM users WHERE id=?", (g.user["id"],)).fetchone()[0]
         new, delta = rt.club_rating_change(cur, data["bot"], data["result"])

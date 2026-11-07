@@ -332,3 +332,20 @@ def test_owner_role_assignment(browser, db_exec):
     assert owner.post(f"/admin/users/{ira}/role", {"role": "owner"}).status_code == 400
     # владелец — тоже админ: админка открыта
     assert owner.get("/admin/").status_code == 200
+    # один админ не может сбросить пароль, заблокировать или удалить другого — это делает только владелец
+    make(browser, db_exec, "Elena", "admin")
+    elena = db_exec("SELECT id FROM users WHERE nick='Elena'")[0][0]
+    hash0 = db_exec("SELECT pw_hash FROM users WHERE id=?", (elena,))[0][0]
+    admin.post(f"/admin/users/{elena}/reset")
+    admin.post(f"/admin/users/{elena}/block")
+    admin.post(f"/admin/users/{elena}/delete", {"confirm": "Elena"})
+    assert tuple(db_exec("SELECT pw_hash, blocked FROM users WHERE id=?", (elena,))[0]) == (hash0, 0)
+    owner.post(f"/admin/users/{elena}/block")
+    assert db_exec("SELECT blocked FROM users WHERE id=?", (elena,))[0][0] == 1
+
+
+def test_safe_next_rejects_control_chars():
+    from ladya.security import safe_next
+    assert safe_next("/clubs") == "/clubs"
+    for bad in ("//evil.com", "/\t/evil.com", "/\n/evil.com", "/\\evil.com", "https://evil.com"):
+        assert safe_next(bad) == "/", bad

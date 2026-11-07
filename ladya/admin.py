@@ -85,6 +85,11 @@ def user_action(uid, action):
     if u["role"] == "owner" and not is_owner():
         flash("Это владелец сайта — его аккаунт может менять только он сам.")
         return redirect(back)
+    # другого администратора блокирует, удаляет и сбрасывает ему пароль только владелец:
+    # иначе один админ мог бы сбросить пароль второму и войти под ним
+    if u["role"] == "admin" and u["id"] != g.user["id"] and not is_owner() and action != "role":
+        flash("С аккаунтом другого администратора может работать только владелец сайта.")
+        return redirect(back)
     if action == "role":
         role = request.form.get("role")
         if not is_owner():

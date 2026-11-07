@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Задачи — Ладья{% endblock %}
+{% block content %}
+<div class="stage">
+  <div class="boardwrap solo"><div id="board" class="board"></div></div>
+  <aside class="panel side pz">
+    <div class="pzhead">
+      <div><small id="pnum" class="muted">Задачи</small><h2 id="ptitle">Загрузка…</h2></div>
+      <span id="pstars" class="stars" aria-label="Сложность"></span>
+    </div>
+    <div class="prow"><span id="ptheme" class="pill"></span><span id="pside" class="pill turn"></span></div>
+    <div id="pgoal" class="pgoal"></div>
+    <div id="status" class="status"></div>
+    <div id="presult" class="presult hidden"><b id="rtitle"></b><p id="ridea"></p><p id="rline" class="muted small"></p></div>
+    <div class="pzbtns">
+      <button id="hint" class="btn ghost" type="button">💡 Подсказка</button>
+      <button id="show" class="btn ghost" type="button">👁 Решение</button>
+      <button id="reset" class="btn ghost" type="button">↺ Заново</button>
+      <button id="next" class="btn" type="button">Дальше →</button>
+    </div>
+    <div class="pzprog">
+      <div class="bar"><i id="pbar"></i></div>
+      <div class="prow"><span id="pcount" class="muted"></span><span id="pstreak" class="pill"></span></div>
+    </div>
+    <div class="prow">
+      {% if prating %}<span class="pill">🧩 Рейтинг в задачах: <b id="prating">{{ prating }}</b></span>{% endif %}
+      <button id="podbtn" class="pill btnlike" type="button">⭐ Задача дня: №{{ pod.id }}</button>
+    </div>
+    <div id="pfilters" class="pzf" role="tablist"></div>
+    <div id="plist" class="plist"></div>
+    <p class="muted small">Рейтинг в задачах меняется только за первую попытку. Подсказка и «Решение» считаются как ошибка.</p>
+    {% if not user %}<p class="muted">Войди, чтобы сохранять решённые задачи и получить рейтинг в задачах.</p>{% endif %}
+  </aside>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chess.js') }}"></script>
+<script src="{{ url_for('static', filename='js/board.js') }}"></script>
+<script src="{{ url_for('static', filename='js/puzzles.js') }}"></script>
+{% endblock %}

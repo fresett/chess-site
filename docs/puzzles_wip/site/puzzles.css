@@ -1,0 +1,37 @@
+/* ======================================================================
+   Задачи: заголовок со звёздами сложности, цель, итог с объяснением,
+   прогресс и серия, фильтры по темам, плитки задач.
+   ====================================================================== */
+.pz{gap:14px}
+.pzhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.pzhead small{display:block;font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:.72rem}
+.pzhead h2{font-size:1.55rem;line-height:1.15}
+.stars{color:var(--accent);font-size:1.05rem;letter-spacing:2px;white-space:nowrap;padding-top:4px}
+.pill.turn.tw{background:#f4efe3;color:#1b1305;border-color:#f4efe3}
+.pill.turn.tb{background:#11151f;color:#f4efe3;border-color:#3a4256}
+.pgoal{font-size:1.15rem;font-weight:800;padding:12px 14px;border-radius:14px;background:var(--panel2);border-left:4px solid var(--accent)}
+.status{font-size:1.02rem;min-height:26px}
+.status.good{color:#5fd08a}.status.bad{color:#ff7a6b}.status.tip{color:var(--accent)}
+.presult{padding:14px 16px;border-radius:16px;border:1.5px solid var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--panel));animation:pop .35s}
+.presult.win{border-color:#4fbf7d;background:color-mix(in srgb,#4fbf7d 12%,var(--panel))}
+.presult b{font-size:1.1rem}
+.presult p{margin:6px 0 0}
+.pzbtns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pzbtns #next{grid-column:1/-1}
+.pzbtns .btn{padding-inline:6px}
+.pzbtns .btn:disabled{opacity:.45;cursor:default}
+.pzprog{display:grid;gap:8px}
+.pzprog .bar{height:10px;border-radius:99px;background:var(--panel2);overflow:hidden;border:1px solid var(--line)}
+.pzprog .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),#5fd08a);border-radius:inherit;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.pzprog .prow{justify-content:space-between;align-items:center}
+#pstreak.hot{border-color:#ff8a3d;box-shadow:0 0 14px -4px #ff8a3d}
+.pzf{display:flex;flex-wrap:wrap;gap:6px}
+.pzf button{padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-weight:700;font-size:.85rem;cursor:pointer}
+.pzf button.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:6px;max-height:260px;overflow:auto;padding:2px}
+.plist button{width:auto;height:50px;display:grid;place-items:center;align-content:center;gap:0;line-height:1.1}
+.plist button span{font-size:.95rem}
+.plist button em{font-style:normal;font-size:.75rem;opacity:.85}
+.plist button.bad{border-color:#d9773a;color:#ffb185}
+.plist button.ok em{opacity:1}
+@media(max-width:800px){.plist{max-height:none}.pzhead h2{font-size:1.3rem}}

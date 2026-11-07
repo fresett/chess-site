@@ -49,7 +49,7 @@
     <a href="{{ url_for('tournaments.index') }}" class="{{ 'on' if ep.startswith('tournaments.') }}"><svg><use href="#i-cup"/></svg><span>Турниры</span></a>
     <a href="{{ url_for('clubs.index') }}" class="more {{ 'on' if ep.startswith('clubs.') }}"><svg><use href="#i-users"/></svg><span>Клубы</span></a>
     <a href="{{ url_for('pages.knowledge') }}" class="more {{ 'on' if ep == 'pages.knowledge' }}"><svg><use href="#i-book"/></svg><span>Познания</span></a>
-    <a href="{{ url_for('pages.leaderboard') }}" class="{{ 'on' if ep == 'pages.leaderboard' }}"><svg><use href="#i-chart"/></svg><span>Рейтинг</span></a>
+    <a href="{{ url_for('pages.leaderboard') }}" class="mob-more {{ 'on' if ep == 'pages.leaderboard' }}"><svg><use href="#i-chart"/></svg><span>Рейтинг</span></a>
     {% if user %}
       <a href="{{ url_for('accounts.profile') }}" class="{{ 'on' if ep in ('accounts.profile', 'accounts.settings') }}" title="{{ user.nick }}"><img class="rava" src="{{ avatar }}" alt=""><span>Профиль</span></a>
     {% else %}

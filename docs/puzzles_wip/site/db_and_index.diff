@@ -1,0 +1,26 @@
+diff --git a/ladya/db.py b/ladya/db.py
+index bfb0296..82e1d68 100644
+--- a/ladya/db.py
++++ b/ladya/db.py
+@@ -256,0 +257,9 @@ def m7_indexes(c):
++def m8_new_puzzles(c):
++    """Новый набор из 50 задач: старые номера теперь значат другие задачи, поэтому отметки «решено»
++    и первые попытки обнуляются. Рейтинг в задачах сохраняется."""
++    _script(c, """
++    DELETE FROM solved;
++    DELETE FROM puzzle_attempts;
++    """)
++
++
+@@ -264,0 +274 @@ MIGRATIONS = [
++    (8, "Новый набор задач", m8_new_puzzles),
+diff --git a/templates/index.html b/templates/index.html
+index 24918e6..5821cbb 100644
+--- a/templates/index.html
++++ b/templates/index.html
+@@ -14 +14 @@
+-      <div><b>25</b><span>задач на мат</span></div>
++      <div><b>{{ npuzzles }}</b><span>задач</span></div>
+@@ -34 +34 @@
+-    <p class="muted">Мат в {{ pod.mate }} {{ 'ход' if pod.mate == 1 else 'хода' }} · сложность {{ pod.rating }}</p>
++    <p class="muted">{{ pod.icon }} {{ pod.themeName }} · сложность {{ pod.rating }}</p>

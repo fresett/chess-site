@@ -154,7 +154,9 @@ def role_required(*roles):
 
 
 def safe_next(nxt, default="/"):
-    if nxt and nxt.startswith("/") and not nxt.startswith("//") and "\\" not in nxt:
+    # браузеры выкидывают из адреса табы и переводы строк: "/\t/evil.com" превратится в "//evil.com"
+    if nxt and nxt.startswith("/") and not nxt.startswith("//") and "\\" not in nxt and \
+            not any(ord(ch) < 32 or ord(ch) == 127 for ch in nxt):
         return nxt
     return default
 

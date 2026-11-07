@@ -738,3 +738,23 @@ body::after{inset:0;opacity:.05;background:repeating-conic-gradient(var(--text) 
   .stage{grid-template-columns:minmax(0,1fr) auto minmax(380px,1fr)}
   .stage>.side{width:min(100%,460px)}
 }
+
+/* ======================================================================
+   Телефон: меню в одну строку, картинки в карточках не налезают на текст,
+   ничего не вылезает за экран по ширине.
+   ====================================================================== */
+@media(max-width:800px){
+  body{overflow-x:clip}
+  .rail .mob-more{display:none!important}
+  .rail.open .mob-more{display:grid!important}
+  .rail:not(.open),.rail:not(.open) nav,.rail:not(.open) .rail-bottom{flex-wrap:nowrap}
+  .rail nav a,.rail-bottom button,.rail-bottom a{width:min(58px,calc((100vw - 64px) / 6))}
+  .rail nav a span,.rail-bottom a span,.rail-bottom button span{white-space:nowrap;overflow:hidden;text-overflow:clip;max-width:100%}
+}
+@media(max-width:560px){
+  .stage3d .showcase,.showcase{max-width:min(300px,76vw)}
+  .bento .card:has(.art){min-height:240px}
+  .bento .art,.bento .tall .art{width:130px;right:-6px;top:-6px}
+  .bento .big .art{width:150px}
+}
+

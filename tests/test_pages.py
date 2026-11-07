@@ -21,7 +21,7 @@ def test_member_pages_and_bot_game(browser, db_exec):
     for url in ("/profile", "/account", "/notifications", "/u/Pupil"):
         assert u.get(url).status_code in (200, 302), url
     r = u.api("/api/game-result", {"bot": 600, "mode": "bot", "result": "win", "color": "b",
-                                   "moves": "e4 e5 Qh5 Nc6 Bc4 Nf6 Qxf7#"})
+                                   "moves": "f3 e5 g4 Qh4#"})
     d = r.get_json()
     assert d["ok"] and d["delta"] > 0
     gid = db_exec("SELECT id FROM games")[0][0]
@@ -31,6 +31,14 @@ def test_member_pages_and_bot_game(browser, db_exec):
     assert u.get(f"/analysis?game={gid}").status_code == 200
     # неверные данные
     assert u.api("/api/game-result", {"bot": 777, "result": "win"}).status_code == 400
+    # подделка победы: без ходов, с невозможными ходами, или «победа», когда мат поставили тебе
+    fakes = [{"moves": ""}, {"moves": "e4 e5 Ke3 Ke6 Kxe6"},
+             {"moves": "f3 e5 g4 Qh4#", "color": "w"}, {"moves": "e4 e5", "color": "w"}]
+    for f in fakes:
+        body = {"bot": 2000, "mode": "bot", "result": "win", "color": "b", **f}
+        assert u.api("/api/game-result", body).status_code == 400, f
+    assert u.api("/api/game-result", {"bot": 2000, "mode": "bot", "result": "draw", "moves": "e4"}).status_code == 400
+    assert u.api("/api/game-result", {"bot": 2000, "mode": "bot", "result": "loss", "moves": ""}).get_json()["ok"]
     # задачи: первая попытка двигает рейтинг, повторная — нет
     d1 = u.api("/api/puzzle-attempt", {"id": 1, "ok": True}).get_json()
     assert d1["delta"] > 0
