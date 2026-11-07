@@ -91,7 +91,8 @@ python app.py
 Схема базы обновляется миграциями (таблица `schema_version`); перед обновлением делается копия
 `instance/backup-before-vN-….db`, данные не теряются.
 
-Раз в 3 месяца нажимай на вкладке **Web** «Run until 3 months from today», иначе бесплатный сайт уснёт.
+**Раз в месяц** заходи на вкладку **Web** и нажимай «Run until 1 month from today», иначе бесплатный сайт
+отключится (за неделю до этого придёт письмо). Сайт сейчас: https://rookline.pythonanywhere.com
 
 ## Rookline Pro (подписка)
 
